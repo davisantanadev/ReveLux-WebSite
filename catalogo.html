@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Catálogo · Rêve Lux</title>
+<meta name="description" content="Todos os produtos da Rêve Lux.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/css/style.css">
+<script>try{var t=localStorage.getItem('rl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+</head>
+<body>
+<div id="site-header"></div>
+
+<main>
+<section class="section catalog">
+  <div class="container">
+    <nav class="crumbs" aria-label="Você está em"><a href="index.html">Início</a><span>/</span><span id="crumb">Catálogo</span></nav>
+    <header class="catalog__head">
+      <div><p class="eyebrow" id="cat-eyebrow">Loja</p><h1 id="cat-title">Todos os produtos</h1><p class="muted" id="cat-count"></p></div>
+      <div class="catalog__tools">
+        <label class="select"><span class="sr-only">Ordenar por</span>
+          <select id="sort">
+            <option value="relevance">Mais relevantes</option>
+            <option value="price-asc">Menor preço</option>
+            <option value="price-desc">Maior preço</option>
+            <option value="name">A a Z</option>
+          </select>
+        </label>
+      </div>
+    </header>
+    <div class="chips" id="chips" role="list"></div>
+    <div class="grid" id="results"></div>
+  </div>
+</section>
+</main>
+
+<div id="site-footer"></div>
+
+<script src="assets/js/config.js"></script>
+<script src="assets/js/data.js"></script>
+<script src="assets/js/store.js"></script>
+<script src="assets/js/layout.js"></script>
+<script src="assets/js/catalogo.js"></script>
+</body>
+</html>
