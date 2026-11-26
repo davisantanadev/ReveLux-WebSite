@@ -24,10 +24,10 @@ docs/screenshots/     # Capturas desktop (claro/escuro) e mobile
 ## Identidade visual
 | Token | Claro | Escuro | Uso |
 |---|---|---|---|
-| `--bg` | `#fdfbf9` pérola | `#16120f` | fundo |
-| `--surface-2` | `#f7f1ec` marfim | `#261f1b` | faixas e áreas de apoio |
+| `--bg` | `#f4eee9` pérola | `#16120f` | fundo |
+| `--surface-2` | `#ebe2db` marfim | `#261f1b` | faixas e áreas de apoio |
 | `--text` | `#2b2422` | `#f2e9e4` | texto |
-| `--accent` | `#b98a7b` rosé-gold suave | `#d4a998` | detalhes, preços no Pix, selos |
+| `--accent` | `#ad7d6e` rosé-gold suave | `#d4a998` | detalhes, preços no Pix, selos |
 
 Tipografia: **Great Vibes** (script, como no logo), **Cormorant Garamond** (títulos) e **Jost** (texto e interface).
 O rosa forte do logo virou um rosé-gold discreto, usado só como acento sobre uma base branca e pérola.

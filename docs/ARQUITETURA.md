@@ -7,8 +7,8 @@ O layout segue a arquitetura padrão das vitrines Stoqui/Bagy, que esses temas c
 ## Frames da home, de cima para baixo
 1. **Barra de avisos**: 3 mensagens rotativas (frete, parcelamento, Pix).
 2. **Header fixo**: menu (mobile), logo, busca central, tema, conta, favoritos e sacola com contador.
-3. **Menu de categorias**: links em caixa alta e "Sale" destacado.
-4. **Hero**: texto e CTAs à esquerda, imagem em arco à direita, com card flutuante de produto.
+3. **Menu de categorias**: cada item rola até a seção relacionada (Novidades, o círculo da categoria, que pisca em destaque, ou Mais vendidos).
+4. **Hero em carrossel automático**: 4 slides que trocam a cada 6 s (pausa no hover), com setas ‹ › nas laterais, bolinhas, arraste no celular e altura que cabe na tela. As imagens ficam em `assets/img/hero/slide-N.jpg` (prompts em `docs/PROMPTS-HERO.md`).
 5. **Faixa de benefícios**: frete, 6x sem juros, troca e segurança.
 6. **Categorias em círculos**: 6 itens (3 por linha no mobile).
 7. **Vitrine "Novidades"**: grade de 4 colunas (2 no mobile).

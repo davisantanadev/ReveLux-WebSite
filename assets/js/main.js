@@ -29,7 +29,7 @@
       { name: 'Kimono Cetim Rosé', price: 269.9, old: 299.9, colors: ['#ecd3c8', '#f6efe6'] },
     ],
   };
-  const cats = ['Vestidos', 'Conjuntos', 'Blusas', 'Saias', 'Calças', 'Acessórios'];
+  const cats = [['Vestidos','vestidos'], ['Conjuntos','conjuntos'], ['Blusas','blusas'], ['Saias','saias'], ['Calças','calcas'], ['Acessórios','acessorios']];
 
   const card = (p, i) => {
     const off = p.old ? Math.round((1 - p.price / p.old) * 100) : 0;
@@ -57,7 +57,7 @@
     el.innerHTML = products[el.dataset.shelf].map(card).join('');
   });
   document.getElementById('cats').innerHTML = cats
-    .map(c => `<li><a href="#"><div class="ph"></div>${c}</a></li>`).join('');
+    .map(([c, id]) => `<li id="cat-${id}"><a href="#cat-${id}"><div class="ph"></div>${c}</a></li>`).join('');
   document.getElementById('insta').innerHTML = Array.from({ length: 6 },
     () => `<a href="#" aria-label="Post do Instagram"><div class="ph"></div></a>`).join('');
   document.querySelector('.drawer__nav').innerHTML = [...document.querySelectorAll('.nav a')]
@@ -87,6 +87,50 @@
     const fav = e.target.closest('.card__fav');
     if (fav) fav.setAttribute('aria-pressed', fav.getAttribute('aria-pressed') !== 'true');
   });
+
+  /* ---------- Navegação por âncoras ---------- */
+  const goTo = hash => {
+    const el = hash && hash.length > 1 && document.getElementById(hash.slice(1));
+    if (!el) return;
+    el.scrollIntoView({ behavior: 'smooth', block: el.matches('.cats li') ? 'center' : 'start' });
+    document.querySelectorAll('.cats li.is-target').forEach(li => li.classList.remove('is-target'));
+    if (el.matches('.cats li')) { el.classList.add('is-target'); setTimeout(() => el.classList.remove('is-target'), 2200); }
+  };
+  document.addEventListener('click', e => {
+    const a = e.target.closest('a[href^="#"]');
+    if (!a || a.getAttribute('href') === '#') { if (a) e.preventDefault(); return; }
+    e.preventDefault(); goTo(a.getAttribute('href'));
+    try { history.replaceState(null, '', a.getAttribute('href')); } catch (err) {}
+  });
+  // destaca o item do menu da seção visível
+  const navLinks = [...document.querySelectorAll('.nav a')];
+  const spy = new IntersectionObserver(es => es.forEach(en => {
+    if (!en.isIntersecting) return;
+    navLinks.forEach(a => a.classList.toggle('is-current', a.getAttribute('href') === '#' + en.target.id));
+  }), { rootMargin: '-45% 0px -50% 0px' });
+  ['novidades', 'mais-vendidos'].forEach(id => spy.observe(document.getElementById(id)));
+
+  /* ---------- Carrossel do hero ---------- */
+  const slides = [...document.querySelectorAll('.hero__slide')];
+  const dots = [...document.querySelectorAll('.hero__dots button')];
+  let idx = 0, timer;
+  const show = n => {
+    idx = (n + slides.length) % slides.length;
+    slides.forEach((s, i) => { s.classList.toggle('is-active', i === idx); s.setAttribute('aria-hidden', i !== idx); s.inert = i !== idx; });
+    dots.forEach((d, i) => d.setAttribute('aria-selected', i === idx));
+  };
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const play = () => { clearInterval(timer); if (!reduce) timer = setInterval(() => show(idx + 1), 6000); };
+  document.querySelector('.hero__arrow--prev').addEventListener('click', () => { show(idx - 1); play(); });
+  document.querySelector('.hero__arrow--next').addEventListener('click', () => { show(idx + 1); play(); });
+  dots.forEach((d, i) => d.addEventListener('click', () => { show(i); play(); }));
+  const hero = document.querySelector('.hero');
+  hero.addEventListener('mouseenter', () => clearInterval(timer));
+  hero.addEventListener('mouseleave', play);
+  let x0 = null;
+  hero.addEventListener('touchstart', e => { x0 = e.touches[0].clientX; }, { passive: true });
+  hero.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) { show(idx + (dx < 0 ? 1 : -1)); play(); } x0 = null; });
+  show(0); play();
 
   /* ---------- Reveal on scroll ---------- */
   const io = new IntersectionObserver(es => es.forEach(en => {
