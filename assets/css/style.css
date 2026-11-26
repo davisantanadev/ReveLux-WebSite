@@ -79,7 +79,9 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.4;stroke
 .header{position:sticky;top:0;z-index:40;background:color-mix(in srgb,var(--bg) 88%,transparent);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
 .header__row{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:1.5rem;height:76px}
 .brand{position:relative;display:inline-flex;align-items:center;justify-content:center}
-.brand__name{position:relative;color:var(--brown-1);background:linear-gradient(100deg,var(--brown-1) 0%,var(--brown-1) 30%,var(--brown-2) 50%,var(--brown-1) 70%,var(--brown-1) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:brandShift 6s ease-in-out infinite;-webkit-text-stroke:1px var(--brown-1);paint-order:stroke fill;padding:0 .15em}
+.brand__name{position:relative;color:var(--brown-1);background:linear-gradient(100deg,var(--brown-1) 0%,var(--brown-1) 30%,var(--brown-2) 50%,var(--brown-1) 70%,var(--brown-1) 100%);background-size:250% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;animation:brandShift 6s ease-in-out infinite;padding:0 .15em}
+.brand__star{width:.5em;height:.5em;font-size:2.5rem;align-self:flex-start;margin:-.05em 0 0 -.05em;stroke:var(--brown-1);stroke-width:1.8;fill:none;animation:twinkle 6s ease-in-out infinite}
+@keyframes twinkle{0%,100%{transform:scale(1) rotate(0);stroke:var(--brown-1)}50%{transform:scale(1.12) rotate(12deg);stroke:var(--brown-2)}}
 @keyframes brandShift{0%,100%{background-position:100% 0}50%{background-position:0 0}}
 .manifesto__logo{width:140px;height:140px;border-radius:50%;object-fit:cover;margin:0 auto;border:1px solid var(--line);box-shadow:var(--shadow)}
 .brand__name{font:400 2.5rem/1.1 var(--script)}
@@ -256,6 +258,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.4;stroke
   .header__row{grid-template-columns:auto 1fr auto;height:64px;gap:.4rem}
   .brand{justify-self:center}
   .brand__name{font-size:2.1rem}
+  .brand__star{font-size:2.1rem}
   .hero__grid{grid-template-columns:1fr}
   .hero__art{order:-1;max-width:340px;margin-inline:auto;width:100%}
   .hero__tag{left:0}
