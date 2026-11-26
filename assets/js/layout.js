@@ -115,9 +115,13 @@ const FOOTER_HTML = `
   const prefersDark = matchMedia('(prefers-color-scheme: dark)');
   const current = () => root.dataset.theme || (prefersDark.matches ? 'dark' : 'light');
   root.dataset.theme = current();
+  const setTheme = (apply) => {
+    if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) { document.startViewTransition(apply); return; }
+    root.classList.add('theme-fade'); apply(); setTimeout(() => root.classList.remove('theme-fade'), 400);
+  };
   document.querySelector('.theme-toggle').addEventListener('click', () => {
     const next = current() === 'dark' ? 'light' : 'dark';
-    root.dataset.theme = next;
+    setTheme(() => { root.dataset.theme = next; });
     try { localStorage.setItem('rl-theme', next); } catch (e) {}
   });
 

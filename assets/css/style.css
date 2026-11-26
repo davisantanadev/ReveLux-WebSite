@@ -42,8 +42,11 @@
 [hidden]{display:none!important}
 html{scroll-behavior:smooth}
 body{margin:0;background:var(--bg);color:var(--text);font:300 16px/1.6 var(--sans);-webkit-font-smoothing:antialiased;overflow-x:hidden}
-/* transição suave de tema em todos os elementos coloridos */
-body,body *{transition:background-color var(--t),color var(--t),border-color var(--t),fill var(--t),stroke var(--t),box-shadow var(--t)}
+/* Troca de tema: a página inteira faz um único fade (View Transitions),
+   então fundo, textos e ícones mudam juntos, sem atraso entre eles. */
+::view-transition-old(root),::view-transition-new(root){animation-duration:.4s;animation-timing-function:ease}
+/* navegador sem View Transitions: troca suave só nos fundos grandes, textos mudam juntos */
+html.theme-fade body,html.theme-fade body *{transition:background-color .35s ease,border-color .35s ease!important}
 img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 ul{list-style:none;margin:0;padding:0}

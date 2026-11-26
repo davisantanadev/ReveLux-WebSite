@@ -9,8 +9,12 @@
   const root = document.documentElement, dark = matchMedia('(prefers-color-scheme: dark)');
   const cur = () => root.dataset.theme || (dark.matches ? 'dark' : 'light');
   root.dataset.theme = cur();
+  const setTheme = (apply) => {
+    if (document.startViewTransition && !matchMedia('(prefers-reduced-motion: reduce)').matches) { document.startViewTransition(apply); return; }
+    root.classList.add('theme-fade'); apply(); setTimeout(() => root.classList.remove('theme-fade'), 400);
+  };
   document.querySelector('.theme-toggle').addEventListener('click', () => {
-    const n = cur() === 'dark' ? 'light' : 'dark'; root.dataset.theme = n;
+    const n = cur() === 'dark' ? 'light' : 'dark'; setTheme(() => { root.dataset.theme = n; });
     try { localStorage.setItem('rl-theme', n); } catch (e) {}
   });
 
