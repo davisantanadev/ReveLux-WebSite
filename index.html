@@ -52,33 +52,93 @@
   <nav class="nav" aria-label="Categorias">
     <ul class="container">
       <li><a href="#novidades">Novidades</a></li>
-      <li><a href="#categorias">Vestidos</a></li>
-      <li><a href="#categorias">Conjuntos</a></li>
-      <li><a href="#categorias">Blusas</a></li>
-      <li><a href="#categorias">Saias &amp; Calças</a></li>
-      <li><a href="#categorias">Acessórios</a></li>
+      <li><a href="#cat-vestidos">Vestidos</a></li>
+      <li><a href="#cat-conjuntos">Conjuntos</a></li>
+      <li><a href="#cat-blusas">Blusas</a></li>
+      <li><a href="#cat-saias">Saias &amp; Calças</a></li>
+      <li><a href="#cat-acessorios">Acessórios</a></li>
       <li><a href="#mais-vendidos" class="nav__sale">Sale</a></li>
     </ul>
   </nav>
 </header>
 
 <main>
-<!-- 3. Hero / banner -->
-<section class="hero">
-  <div class="container hero__grid">
-    <div class="hero__copy reveal">
-      <p class="eyebrow">Coleção Verão 2027</p>
-      <h1>Leveza que <em>se veste</em><br>como um sonho.</h1>
-      <p class="lead">Peças em tons de pérola, nude e champanhe para quem transforma o dia a dia em ocasião.</p>
-      <div class="hero__cta">
-        <a href="#novidades" class="btn btn--primary">Ver coleção</a>
-        <a href="#categorias" class="btn btn--ghost">Comprar por categoria</a>
+<!-- 3. Hero: carrossel automático -->
+<section class="hero" aria-roledescription="carrossel" aria-label="Destaques">
+  <div class="hero__viewport">
+    <article class="hero__slide is-active" aria-roledescription="slide" aria-label="1 de 4">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Coleção Verão 2027</p>
+          <h1 class="hero__title">Leveza que <em>se veste</em><br>como um sonho.</h1>
+          <p class="lead">Peças em tons de pérola, nude e champanhe para quem transforma o dia a dia em ocasião.</p>
+          <div class="hero__cta">
+            <a href="#novidades" class="btn btn--primary">Ver coleção</a>
+            <a href="#categorias" class="btn btn--ghost">Comprar por categoria</a>
+          </div>
+        </div>
+        <div class="hero__art">
+          <div class="hero__frame"><div class="ph"><span>Rêve</span></div><img src="assets/img/hero/slide-1.jpg" alt="" loading="eager" onerror="this.remove()"></div>
+          <div class="hero__tag">Destaque<br><strong>Vestido Aurora Midi</strong><br>R$ 289,90</div>
+        </div>
       </div>
-    </div>
-    <div class="hero__art reveal" aria-hidden="true">
-      <div class="hero__frame"><div class="ph ph--hero"><span>Rêve</span></div></div>
-      <div class="hero__tag">Novo<br><strong>Vestido Aurora</strong><br>R$ 289,90</div>
-    </div>
+    </article>
+    <article class="hero__slide" aria-roledescription="slide" aria-label="2 de 4" aria-hidden="true">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Conjuntos</p>
+          <h2 class="hero__title">Linho, luz<br>e <em>movimento</em>.</h2>
+          <p class="lead">Conjuntos leves que vão do brunch ao fim de tarde sem perder a elegância.</p>
+          <div class="hero__cta">
+            <a href="#cat-conjuntos" class="btn btn--primary">Ver conjuntos</a>
+            <a href="#categorias" class="btn btn--ghost">Comprar por categoria</a>
+          </div>
+        </div>
+        <div class="hero__art">
+          <div class="hero__frame"><div class="ph"><span>Rêve</span></div><img src="assets/img/hero/slide-2.jpg" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="hero__tag">Destaque<br><strong>Conjunto Pérola Linho</strong><br>R$ 349,90</div>
+        </div>
+      </div>
+    </article>
+    <article class="hero__slide" aria-roledescription="slide" aria-label="3 de 4" aria-hidden="true">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Festa &amp; Noite</p>
+          <h2 class="hero__title">O brilho<br>da <em>sua noite</em>.</h2>
+          <p class="lead">Cetim, caimento fluido e detalhes que capturam a luz na medida certa.</p>
+          <div class="hero__cta">
+            <a href="#mais-vendidos" class="btn btn--primary">Ver mais vendidos</a>
+            <a href="#categorias" class="btn btn--ghost">Comprar por categoria</a>
+          </div>
+        </div>
+        <div class="hero__art">
+          <div class="hero__frame"><div class="ph"><span>Rêve</span></div><img src="assets/img/hero/slide-3.jpg" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="hero__tag">Destaque<br><strong>Vestido Lumière Longo</strong><br>R$ 459,90</div>
+        </div>
+      </div>
+    </article>
+    <article class="hero__slide" aria-roledescription="slide" aria-label="4 de 4" aria-hidden="true">
+      <div class="container hero__grid">
+        <div class="hero__copy">
+          <p class="eyebrow">Essenciais</p>
+          <h2 class="hero__title">Básicos com<br><em>alma de luxo</em>.</h2>
+          <p class="lead">Alfaiataria e seda em cores neutras, feitas para combinar com tudo.</p>
+          <div class="hero__cta">
+            <a href="#cat-blusas" class="btn btn--primary">Ver blusas</a>
+            <a href="#categorias" class="btn btn--ghost">Comprar por categoria</a>
+          </div>
+        </div>
+        <div class="hero__art">
+          <div class="hero__frame"><div class="ph"><span>Rêve</span></div><img src="assets/img/hero/slide-4.jpg" alt="" loading="lazy" onerror="this.remove()"></div>
+          <div class="hero__tag">Destaque<br><strong>Blusa Seda Champagne</strong><br>R$ 179,90</div>
+        </div>
+      </div>
+    </article>
+  </div>
+  <button class="hero__arrow hero__arrow--prev" aria-label="Slide anterior"><svg viewBox="0 0 24 24"><path d="m15 5-7 7 7 7"/></svg></button>
+  <button class="hero__arrow hero__arrow--next" aria-label="Próximo slide"><svg viewBox="0 0 24 24"><path d="m9 5 7 7-7 7"/></svg></button>
+  <div class="hero__dots" role="tablist" aria-label="Escolher slide">
+    <button role="tab" aria-selected="true" aria-label="Slide 1"></button><button role="tab" aria-selected="false" aria-label="Slide 2"></button><button role="tab" aria-selected="false" aria-label="Slide 3"></button><button role="tab" aria-selected="false" aria-label="Slide 4"></button>
   </div>
 </section>
 
