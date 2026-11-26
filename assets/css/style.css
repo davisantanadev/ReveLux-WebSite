@@ -211,6 +211,9 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.4;stroke
 .insta a::before{content:"♡";position:absolute;inset:0;z-index:2;display:grid;place-items:center;font-size:1.6rem;color:#fff;background:rgba(60,40,32,.35);opacity:0;transition:opacity var(--t)}
 .insta a:hover::before{opacity:1}
 
+.insta__cta{display:flex;justify-content:center;margin-top:2rem}
+.insta__cta svg{width:18px;height:18px}
+
 /* Newsletter */
 .newsletter{background:var(--text);color:var(--bg);padding:3.2rem 0}
 .newsletter__inner{display:flex;justify-content:space-between;align-items:center;gap:2rem;flex-wrap:wrap}
