@@ -9,8 +9,14 @@
   catsEl.innerHTML = window.RL_CATEGORIES
     .map(c => `<li id="cat-${c.slug}"><a href="catalogo.html?cat=${c.slug}"><div class="ph"><img src="assets/img/categorias/cat-${c.slug}.jpg" alt="Peças da categoria ${c.name}" width="800" height="800" loading="lazy"></div>${c.name}</a></li>`).join('');
   catsEl.addEventListener('error', e => { if (e.target.tagName === 'IMG') e.target.remove(); }, true); // 'error' não borbulha: captura (sem inline handler, por causa da CSP)
-  document.getElementById('insta').innerHTML = Array.from({ length: 6 },
-    () => `<a href="https://www.instagram.com/reveluxmoda/" target="_blank" rel="noopener" aria-label="Post do Instagram"><div class="ph"></div></a>`).join('');
+  // Banners duplos (index.html) e grade do Instagram: mesma regra das categorias — a foto cobre o degradê e some se o arquivo faltar.
+  const dropBroken = e => { if (e.target.tagName === 'IMG') e.target.remove(); };
+  document.querySelector('.duo')?.addEventListener('error', dropBroken, true);
+  const INSTA_ALTS = ['Mulher de vestido slip champagne diante de espelho em arco', 'Mãos amarrando faixa de cetim rosé na cintura', 'Arara com peças em tons neutros', 'Camisa de linho, brincos de pérola, óculos e café sobre travertino', 'Mulher sorrindo caminhando de conjunto de linho bege', 'Caixa de presente marfim com laço de cetim'];
+  const instaEl = document.getElementById('insta');
+  instaEl.innerHTML = INSTA_ALTS.map((alt, i) =>
+    `<a href="https://www.instagram.com/reveluxmoda/" target="_blank" rel="noopener" aria-label="Post do Instagram: ${alt}"><div class="ph"><img src="assets/img/insta/insta-${i + 1}.jpg" alt="${alt}" width="600" height="600" loading="lazy"></div></a>`).join('');
+  instaEl.addEventListener('error', dropBroken, true);
 
   /* ---------- Navegação por âncoras ---------- */
   const goTo = hash => {

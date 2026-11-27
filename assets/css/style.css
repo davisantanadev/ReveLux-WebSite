@@ -193,6 +193,15 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.4;stroke
 .promo{position:relative;aspect-ratio:16/10;border-radius:var(--radius);overflow:hidden;border:1px solid var(--line)}
 .promo .ph{transition:transform 1s ease}
 .promo:hover .ph{transform:scale(1.04)}
+.promo .ph img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover}
+/* Texto sobre a foto: cor fixa por banner (a foto não muda com o tema) + véu suave no canto inferior esquerdo. Sem foto (fallback) valem o degradê e as cores do tema. */
+.promo:has(.ph img)::after{content:"";position:absolute;inset:0;z-index:1;pointer-events:none}
+.promo--festa:has(.ph img)::after{background:radial-gradient(75% 70% at 0% 100%,rgba(22,18,15,.6),transparent 70%)}
+.promo--basicos:has(.ph img)::after{background:radial-gradient(75% 70% at 0% 100%,rgba(244,238,233,.7),transparent 70%)}
+.promo--festa:has(.ph img) h3{color:#f6efe6}
+.promo--festa:has(.ph img) .eyebrow,.promo--festa:has(.ph img) .link{color:#e9d3c2}
+.promo--basicos:has(.ph img) h3{color:#2b2422}
+.promo--basicos:has(.ph img) .eyebrow,.promo--basicos:has(.ph img) .link{color:#4a332a}
 .ph--promo2{background:radial-gradient(90% 70% at 80% 20%,rgba(255,255,255,.5),transparent 60%),linear-gradient(200deg,var(--ph-b),var(--ph-a))}
 .promo__txt{position:absolute;left:2rem;bottom:2rem;z-index:2}
 .promo h3{font-size:clamp(1.8rem,3.4vw,2.6rem);margin-bottom:.6rem}
@@ -213,6 +222,7 @@ svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.4;stroke
 /* Insta */
 .insta{display:grid;grid-template-columns:repeat(6,1fr);gap:.6rem}
 .insta a{aspect-ratio:1;border-radius:10px;overflow:hidden;position:relative}
+.insta a .ph img{position:absolute;inset:0;z-index:1;width:100%;height:100%;object-fit:cover}
 .insta a::before{content:"♡";position:absolute;inset:0;z-index:2;display:grid;place-items:center;font-size:1.6rem;color:#fff;background:rgba(60,40,32,.35);opacity:0;transition:opacity var(--t)}
 .insta a:hover::before{opacity:1}
 
