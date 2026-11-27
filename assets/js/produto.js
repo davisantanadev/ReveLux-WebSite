@@ -22,7 +22,12 @@
   const sel = { color: colors.length === 1 ? colors[0].name : '', size: sizes.length === 1 ? sizes[0] : '', qty: 1, img: 0 };
   const off = p.compare_at_price ? Math.round((1 - p.price / p.compare_at_price) * 100) : 0;
   // tipo de tabela de medidas (null = sem guia, ex.: acessórios)
-  const guideKind = sizes.length && RL_MEDIDAS && RL_GUIA ? RL_MEDIDAS.guideFor(p.category, sizes) : null;
+  // só há guia se algum tamanho da peça existir na tabela (ex.: "Único" não existe)
+  const kindFound = sizes.length && RL_MEDIDAS && RL_GUIA ? RL_MEDIDAS.guideFor(p.category, sizes) : null;
+  const guideKind = kindFound && sizes.some(s => Object.prototype.hasOwnProperty.call(RL_MEDIDAS.GUIDE[kindFound].sizes, s)) ? kindFound : null;
+  // tamanho único: mostra a faixa só se ela vier dos detalhes da peça, ex. "Tamanho único (veste do P ao G)"
+  const oneSizeNote = !guideKind && sizes.length === 1 && /^único$/i.test(sizes[0])
+    ? (p.details || []).map(d => /tamanho único\s*\(([^)]+)\)/i.exec(d)).find(Boolean) : null;
   const media = src => src ? `<img src="${esc(src)}" alt="${esc(p.name)}">` : '<div class="ph"><span>Rêve</span></div>';
 
   box.innerHTML = `
@@ -41,7 +46,7 @@
       ${colors.length ? `<fieldset class="opt"><legend>Cor: <strong id="sel-color">${esc(sel.color || 'escolha')}</strong></legend>
         <div class="opt__colors">${colors.map(c => `<button type="button" class="swatch" data-color="${esc(c.name)}" aria-pressed="${sel.color === c.name}" aria-label="${esc(c.name)}" style="--c:${safeHex(c.hex)}"></button>`).join('')}</div></fieldset>` : ''}
 
-      ${sizes.length ? `<fieldset class="opt"><legend>Tamanho: <strong id="sel-size">${esc(sel.size || 'escolha')}</strong> <span class="fit-hint" id="fit-hint" hidden></span>${guideKind ? ' <a href="medidas.html" class="link pdp__guide" aria-haspopup="dialog">Guia de medidas</a>' : ''}</legend>
+      ${sizes.length ? `<fieldset class="opt"><legend>Tamanho: <strong id="sel-size">${esc(sel.size || 'escolha')}</strong> <span class="fit-hint" id="fit-hint" hidden></span>${oneSizeNote ? ` <span class="size-note">Tamanho único · ${esc(oneSizeNote[1])}</span>` : ''}${guideKind ? ' <a href="medidas.html" class="link pdp__guide" aria-haspopup="dialog">Guia de medidas</a>' : ''}</legend>
         <div class="opt__sizes">${sizes.map(s => `<button type="button" class="size" data-size="${esc(s)}" aria-pressed="${sel.size === s}">${esc(s)}</button>`).join('')}</div></fieldset>` : ''}
 
       <div class="pdp__buy">
