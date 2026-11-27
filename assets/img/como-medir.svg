@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 240 320" role="img" aria-labelledby="t">
+  <title id="t">Como medir: busto, cintura e quadril</title>
+  <g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- silhueta -->
+    <circle cx="100" cy="36" r="19"/>
+    <path d="M93 55v13M107 55v13"/>
+    <path d="M93 68C79 72 65 75 60 85C57 96 58 110 63 122C68 136 74 150 74 162C74 176 64 190 62 206C61 226 70 248 78 306"/>
+    <path d="M107 68C121 72 135 75 140 85C143 96 142 110 137 122C132 136 126 150 126 162C126 176 136 190 138 206C139 226 130 248 122 306"/>
+    <path d="M100 228L96 306M100 228L104 306"/>
+    <path d="M60 85C52 108 48 140 46 178M140 85C148 108 152 140 154 178"/>
+    <!-- marcações -->
+    <g stroke-dasharray="3 3">
+      <ellipse cx="100" cy="118" rx="39" ry="5"/>
+      <ellipse cx="100" cy="162" rx="28" ry="4"/>
+      <ellipse cx="100" cy="206" rx="40" ry="5"/>
+    </g>
+    <path d="M139 118H172M128 162H172M140 206H172"/>
+  </g>
+  <g fill="currentColor" font-family="Jost, system-ui, sans-serif" font-size="13">
+    <circle cx="139" cy="118" r="2.2"/>
+    <circle cx="128" cy="162" r="2.2"/>
+    <circle cx="140" cy="206" r="2.2"/>
+    <text x="176" y="122">Busto</text>
+    <text x="176" y="166">Cintura</text>
+    <text x="176" y="210">Quadril</text>
+  </g>
+</svg>

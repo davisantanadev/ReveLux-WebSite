@@ -1,6 +1,7 @@
 /* Rêve Lux — página de produto (produto.html?id=slug) */
 (async () => {
-  const { products, cart, favs, card, reveal, toast, openDrawer, brl, esc, cfg, safeHex, safeImg } = window.RL;
+  const { products, cart, favs, account, card, reveal, openDrawer, brl, esc, cfg, safeHex, safeImg } = window.RL;
+  const { RL_MEDIDAS, RL_VALID, RL_GUIA } = window;
   const id = new URLSearchParams(location.search).get('id');
   const box = document.getElementById('pdp');
   const p = id ? await products.get(id).catch(() => null) : null;
@@ -20,6 +21,8 @@
   const colors = p.colors || [], sizes = p.sizes || [];
   const sel = { color: colors.length === 1 ? colors[0].name : '', size: sizes.length === 1 ? sizes[0] : '', qty: 1, img: 0 };
   const off = p.compare_at_price ? Math.round((1 - p.price / p.compare_at_price) * 100) : 0;
+  // tipo de tabela de medidas (null = sem guia, ex.: acessórios)
+  const guideKind = sizes.length && RL_MEDIDAS && RL_GUIA ? RL_MEDIDAS.guideFor(p.category, sizes) : null;
   const media = src => src ? `<img src="${esc(src)}" alt="${esc(p.name)}">` : '<div class="ph"><span>Rêve</span></div>';
 
   box.innerHTML = `
@@ -38,7 +41,7 @@
       ${colors.length ? `<fieldset class="opt"><legend>Cor: <strong id="sel-color">${esc(sel.color || 'escolha')}</strong></legend>
         <div class="opt__colors">${colors.map(c => `<button type="button" class="swatch" data-color="${esc(c.name)}" aria-pressed="${sel.color === c.name}" aria-label="${esc(c.name)}" style="--c:${safeHex(c.hex)}"></button>`).join('')}</div></fieldset>` : ''}
 
-      ${sizes.length ? `<fieldset class="opt"><legend>Tamanho: <strong id="sel-size">${esc(sel.size || 'escolha')}</strong> <a href="#" class="link pdp__guide">Guia de medidas</a></legend>
+      ${sizes.length ? `<fieldset class="opt"><legend>Tamanho: <strong id="sel-size">${esc(sel.size || 'escolha')}</strong> <span class="fit-hint" id="fit-hint" hidden></span>${guideKind ? ' <a href="medidas.html" class="link pdp__guide" aria-haspopup="dialog">Guia de medidas</a>' : ''}</legend>
         <div class="opt__sizes">${sizes.map(s => `<button type="button" class="size" data-size="${esc(s)}" aria-pressed="${sel.size === s}">${esc(s)}</button>`).join('')}</div></fieldset>` : ''}
 
       <div class="pdp__buy">
@@ -59,6 +62,24 @@
   const $ = s => box.querySelector(s);
   if (p.stock <= 0) { $('#add').disabled = true; $('#add').textContent = 'Esgotado'; }
 
+  const selectSize = s => {
+    sel.size = s; $('#sel-size').textContent = s;
+    box.querySelectorAll('[data-size]').forEach(b => b.setAttribute('aria-pressed', b.dataset.size === s));
+  };
+
+  // "Seu tamanho: M" para a cliente logada com medidas salvas
+  const fitHint = async () => {
+    const el = $('#fit-hint'); if (!el || !guideKind || !account || !RL_VALID) return;
+    let m = null;
+    try { if (await account.current()) m = (await account.getProfile()).measurements; } catch (e) { m = null; }
+    const v = m ? RL_VALID.measures({ busto: m.busto, cintura: m.cintura, quadril: m.quadril }) : null;
+    const r = v && v.ok ? RL_MEDIDAS.recommendSize(guideKind, v.value, sizes) : null;
+    el.textContent = r ? `Seu tamanho: ${r.size}` : '';
+    el.hidden = !r;
+  };
+  fitHint();
+  document.addEventListener('rl:account', fitHint);
+
   box.addEventListener('click', e => {
     const t = e.target.closest('button, a.pdp__guide'); if (!t) return;
     if (t.dataset.img !== undefined) {
@@ -66,9 +87,12 @@
       box.querySelectorAll('[data-img]').forEach(b => b.setAttribute('aria-pressed', b === t));
     }
     if (t.dataset.color) { sel.color = t.dataset.color; $('#sel-color').textContent = sel.color; box.querySelectorAll('[data-color]').forEach(b => b.setAttribute('aria-pressed', b === t)); }
-    if (t.dataset.size) { sel.size = t.dataset.size; $('#sel-size').textContent = sel.size; box.querySelectorAll('[data-size]').forEach(b => b.setAttribute('aria-pressed', b === t)); }
+    if (t.dataset.size) selectSize(t.dataset.size);
     if (t.dataset.q) { sel.qty = Math.max(1, Math.min(p.stock || 99, sel.qty + +t.dataset.q)); $('#qty').textContent = sel.qty; }
-    if (t.classList.contains('pdp__guide')) { e.preventDefault(); toast('P 36–38 · M 40–42 · G 44–46 · GG 48'); }
+    if (t.classList.contains('pdp__guide')) {
+      e.preventDefault();
+      RL_GUIA.open({ category: p.category, sizes, name: p.name, onPick: selectSize });
+    }
     if (t.id === 'add') {
       const miss = [colors.length && !sel.color && 'a cor', sizes.length && !sel.size && 'o tamanho'].filter(Boolean);
       if (miss.length) { $('#msg').textContent = `Escolha ${miss.join(' e ')} antes de adicionar.`; return; }
