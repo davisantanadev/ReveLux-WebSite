@@ -34,7 +34,7 @@ O plano gratuito aguenta bem o início: 500 MB de banco, 1 GB de fotos e 50 mil 
 
 ## Tabelas
 ```
-profiles      id (=auth.users), full_name, phone, cpf, role ('customer' | 'admin')
+profiles      id (=auth.users), full_name, phone, cpf, role ('customer' | 'admin'), measurements (jsonb: busto/cintura/quadril/altura em cm, 40–220)
 products      id (slug), name, category, description, details[], price, compare_at_price,
               tag, colors (jsonb), sizes[], images[], stock, active, is_new, is_bestseller
 addresses     user_id, cep, street, number, complement, district, city, state
