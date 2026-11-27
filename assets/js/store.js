@@ -32,12 +32,18 @@
 
   /* ---------- Supabase client (carregado sob demanda) ---------- */
   let clientP = null;
+  // cliente chegou pelo link de recuperação de senha (o Supabase limpa o hash da URL, então lemos já ao carregar)
+  let recovery = useSupabase && /[#&]type=recovery(&|$)/.test(location.hash || '');
   const client = () => {
     if (!useSupabase) return Promise.resolve(null);
     if (!clientP) clientP = new Promise((res, rej) => {
-      const done = () => res(window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
-        auth: { persistSession: true, autoRefreshToken: true, storageKey: 'rl-auth' },
-      }));
+      const done = () => {
+        const c = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
+          auth: { persistSession: true, autoRefreshToken: true, storageKey: 'rl-auth' },
+        });
+        c.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') recovery = true; });
+        res(c);
+      };
       if (window.supabase) return done();
       const s = document.createElement('script'); s.src = SUPABASE_JS; s.onload = done; s.onerror = rej;
       document.head.appendChild(s);
@@ -249,7 +255,17 @@
   const CUST_LOCK_KEY = 'rl-cust-lock';
   const custLock = () => ls.get(CUST_LOCK_KEY, { fails: 0, until: 0 });
   const normEmail = e => String(e || '').trim().toLowerCase().slice(0, 254);
-  const sha256 = async s => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(s)))), b => b.toString(16).padStart(2, '0')).join('');
+  // SHA-256 só para não guardar a senha em texto puro no demo. Em contexto não seguro (ex.: IP da rede local)
+  // crypto.subtle não existe: cai num hash simples NÃO criptográfico, aceitável apenas na demonstração.
+  const sha256 = async s => {
+    s = String(s);
+    if (window.crypto?.subtle) return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(s))), b => b.toString(16).padStart(2, '0')).join('');
+    let h1 = 0xdeadbeef, h2 = 0x41c6ce57;
+    for (let k = 0; k < s.length; k++) { const c = s.charCodeAt(k); h1 = Math.imul(h1 ^ c, 2654435761); h2 = Math.imul(h2 ^ c, 1597334677); }
+    h1 = Math.imul(h1 ^ (h1 >>> 16), 2246822507) ^ Math.imul(h2 ^ (h2 >>> 13), 3266489909);
+    h2 = Math.imul(h2 ^ (h2 >>> 16), 2246822507) ^ Math.imul(h1 ^ (h1 >>> 13), 3266489909);
+    return 'weak-' + (h2 >>> 0).toString(16).padStart(8, '0') + (h1 >>> 0).toString(16).padStart(8, '0');
+  };
   const demoAccounts = () => { const a = ls.get(DEMO_ACC_KEY, {}); return a && typeof a === 'object' && !Array.isArray(a) ? a : {}; };
   const demoMe = () => { // conta logada no demo (ou erro de sessão)
     const all = demoAccounts(); const email = ls.get(DEMO_SESSION_KEY, null);
@@ -279,7 +295,7 @@
       }
       const all = demoAccounts();
       if (all[email]) throw new Error('Já existe uma conta com esse e-mail.');
-      all[email] = { id: newId(), email, passHash: await sha256(password), profile: { full_name: name || '', phone: phone || '', cpf: '', measurements: null }, addresses: [] };
+      all[email] = { id: newId(), email, passHash: await sha256(password), profile: { full_name: name || '', phone: phone || '', cpf: '', measurements: {} }, addresses: [] };
       ls.set(DEMO_ACC_KEY, all);
       return { needsConfirmation: false };
     },
@@ -297,8 +313,10 @@
       if (sb) {
         const { error } = await sb.auth.signInWithPassword({ email, password });
         if (error) {
-          if (/not confirmed/i.test(String(error.message || ''))) throw new Error('Confirme seu e-mail antes de entrar.');
-          fail();
+          const m = String(error.message || '');
+          if (/not confirmed/i.test(m)) throw new Error('Confirme seu e-mail antes de entrar.');
+          if (error.code === 'invalid_credentials' || /invalid login credentials/i.test(m)) fail(); // só credencial errada conta
+          throw friendly(error); // rede/limite do servidor: mensagem genérica, sem contar tentativa
         }
       } else {
         const acc = demoAccounts()[email];
@@ -319,6 +337,20 @@
       const sb = await client().catch(() => null);
       if (sb) { try { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/conta.html' }); } catch (e) { console.error(e); } }
     },
+    async recoveryPending() { // true quando a cliente chegou pelo link de "esqueci a senha"
+      if (!useSupabase) return false;
+      await client().catch(() => null); // garante o listener PASSWORD_RECOVERY registrado
+      return recovery;
+    },
+    async updatePassword(newPassword) {
+      const sb = await client();
+      if (sb) {
+        const { error } = await sb.auth.updateUser({ password: newPassword });
+        if (error) throw friendly(error);
+        recovery = false; return;
+      }
+      const { all, acc } = demoMe(); acc.passHash = await sha256(newPassword); ls.set(DEMO_ACC_KEY, all);
+    },
     async current() {
       const sb = await client().catch(() => null);
       if (sb) { const { data } = await sb.auth.getUser(); return data?.user ? { id: data.user.id, email: data.user.email } : null; }
@@ -331,13 +363,14 @@
         const u = await sbUser(sb);
         const { data, error } = await sb.from('profiles').select(PROFILE_COLS).eq('id', u.id).single();
         if (error) throw friendly(error);
-        return { full_name: data.full_name || '', phone: data.phone || '', cpf: data.cpf || '', measurements: data.measurements || null };
+        return { full_name: data.full_name || '', phone: data.phone || '', cpf: data.cpf || '', measurements: data.measurements || {} };
       }
       const p = demoMe().acc.profile;
-      return { full_name: p.full_name || '', phone: p.phone || '', cpf: p.cpf || '', measurements: p.measurements || null };
+      return { full_name: p.full_name || '', phone: p.phone || '', cpf: p.cpf || '', measurements: p.measurements || {} };
     },
-    async updateProfile({ full_name, phone, cpf }) {
-      const row = { full_name, phone, cpf };
+    async updateProfile(patch) { // só as chaves enviadas: undefined não mexe, null limpa
+      const row = {}; ['full_name', 'phone', 'cpf'].forEach(k => { if (patch && patch[k] !== undefined) row[k] = patch[k]; });
+      if (!Object.keys(row).length) return;
       const sb = await client();
       if (sb) {
         const u = await sbUser(sb);
