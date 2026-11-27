@@ -29,5 +29,21 @@ Imagem 3:4 → selos (Novo / -%) → coração de favorito → botão "Adicionar
 - `≤1024px`: 3 colunas, rodapé em 2 colunas
 - `≤760px`: header compacto com menu lateral, 2 colunas, banners e depoimentos empilhados
 
+## Páginas e scripts da conta e do guia de medidas
+- **`conta.html`** (`assets/js/conta.js`): entrar, criar conta (com aceite da política de privacidade), "esqueci a senha" com o formulário de nova senha, e **Minha conta** com dados, medidas, endereços e pedidos.
+- **`medidas.html`**: página do guia de medidas, com tabela e "Descubra seu tamanho".
+- **Guia na página do produto**: painel lateral aberto por `RL_GUIA.open()` (`assets/js/guia.js`); só aparece se algum tamanho da peça existir na tabela.
+- **`assets/js/medidas.js`**: tabela de medidas **ilustrativa** (valores de exemplo) e recomendação de tamanho, em lógica pura.
+- **`assets/js/validacao.js`**: validação dos formulários da conta (telefone, CPF, endereço, medidas), sem DOM.
+- **`RL.account`** (`assets/js/store.js`): cadastro, entrada, saída, recuperação de senha, perfil, medidas, endereços e pedidos. No modo demonstração grava no navegador; com Supabase usa as tabelas `profiles`, `addresses` e `orders`.
+- **Migração `supabase/migrations/20261127000007_customer_account.sql`** (**ainda não aplicada**): coluna `measurements` em `profiles`, telefone no cadastro e grants de endereços e pedidos.
+- **Testes** em `tests/`: `node --test tests/medidas.test.js tests/validacao.test.js`.
+
+## Pendências para lançar
+- Criar a página real da política de privacidade (o link em `conta.html` ainda é `#`).
+- Aplicar as migrações 000005 a 000007 no Supabase.
+- Configurar as Redirect URLs do Supabase Auth (ver `docs/BANCO-DE-DADOS.md`).
+- Trocar a tabela de medidas de exemplo (`assets/js/medidas.js`) pelas medidas reais.
+
 ## Próximos passos
 Trocar os placeholders por fotos reais, criar a página de produto e de categoria e integrar com a plataforma (Stoqui, Bagy ou outra).

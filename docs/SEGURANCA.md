@@ -14,6 +14,12 @@ O site é estático e roda no navegador, onde nada é confiável. Por isso **que
 | Banco: auditoria | Trigger registra criação, edição e exclusão de produtos, mudança de pedidos e de `role` em `audit_log`, que só admin lê | `audit()` |
 | Storage | Bucket só de imagens (jpeg/png/webp/avif, sem SVG), até 5 MB; só admin envia; ninguém lista os arquivos | `…01_schema.sql` |
 | Login | Senha com no mínimo 10 caracteres, com maiúscula, minúscula e número; limite de tentativas no servidor (Supabase) e bloqueio progressivo no navegador depois de 5 erros; mensagem genérica, que não revela se o e-mail existe | Supabase Auth, `store.js` |
+| Conta da cliente: dados | **RLS por dono**: a cliente só lê e altera o próprio perfil, endereços e pedidos; medidas validadas no banco (só busto, cintura, quadril e altura, entre 40 e 220 cm). A migração 000007 ainda não foi aplicada | `…07_customer_account.sql`, `RL.account` |
+| Conta da cliente: `role` | O `role` nunca vem do cliente: fora do GRANT de coluna e ignorado nos metadados do cadastro | `…01_schema.sql`, `handle_new_user()` |
+| Conta da cliente: LGPD | O aceite da política de privacidade é obrigatório e é gravado no cadastro, com data e versão (`privacy_accepted_at`, `privacy_version`) | `signUp()` em `store.js` |
+| Conta da cliente: login | Bloqueio progressivo no navegador depois de 5 erros, com chave própria (`rl-cust-lock`), separada da do painel; só credencial errada conta; mensagem genérica | `RL.account.signIn()` |
+| Conta da cliente: página | `conta.html` com `noindex` e `no-store` | `conta.html`, `vercel.json`, `_headers` |
+| Sessão compartilhada | Lojista e cliente usam a mesma sessão do Supabase (`rl-auth`) no mesmo navegador, sem escalada de privilégio: o painel confere `role = 'admin'` no servidor | `admin.js`, `store.js` |
 | Rota do painel | O painel só aparece depois que o servidor valida o token (`auth.getUser`) e confirma `role = 'admin'`; a sessão cai após 30 min sem uso; `noindex`, `no-store` e bloqueio no `robots.txt` | `admin.js`, `vercel.json` |
 | XSS | Toda saída dinâmica passa por `esc()`; cores por `safeHex()`, URLs por `safeImg()`; **CSP `script-src 'self'`**, sem script inline nem `eval`; supabase-js servido pelo próprio site | `store.js`, metas CSP nas páginas |
 | SQL / filtro injection | Consultas parametrizadas pelo supabase-js; a busca remove `% _ , ( ) * : ; ' " < >` e limita a 60 caracteres | `cleanQuery()` |
