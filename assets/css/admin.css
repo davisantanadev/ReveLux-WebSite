@@ -93,3 +93,11 @@
   .row2,.row3{grid-template-columns:1fr}
   .mode{display:none}
 }
+
+/* Abas */
+.tabs{display:flex;gap:.3rem;border-bottom:1px solid var(--line);margin-bottom:2rem;overflow-x:auto;scrollbar-width:none}
+.tabs button{flex:none;border:0;background:none;padding:.8rem 1.1rem;font-size:.78rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button[aria-selected="true"]{color:var(--text);border-color:var(--accent)}
+.note{font-size:.85rem;margin:-0.6rem 0 1.2rem;max-width:70ch}
+.table select,.table input{height:34px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--text);padding:0 .5rem;font:inherit;font-size:.85rem}
+.table input{width:140px}

@@ -92,7 +92,7 @@ const FOOTER_HTML = `
   </div>
 </aside>
 `;
-  const { cart, favs, brl, esc, cfg } = window.RL;
+  const { cart, favs, brl, esc, cfg, safeHex, safeImg } = window.RL;
   const root = document.documentElement;
   const isHome = !!document.querySelector('.hero');
 
@@ -140,7 +140,7 @@ const FOOTER_HTML = `
   let tt; const toast = msg => { toastEl.textContent = msg; toastEl.classList.add('is-on'); clearTimeout(tt); tt = setTimeout(() => toastEl.classList.remove('is-on'), 2600); };
 
   /* ---------- Sacola ---------- */
-  const thumb = src => src ? `<img src="${esc(src)}" alt="" loading="lazy">` : '<div class="ph"></div>';
+  const thumb = src => safeImg(src) ? `<img src="${esc(safeImg(src))}" alt="" loading="lazy">` : '<div class="ph"></div>';
   const renderCart = () => {
     const items = cart.items();
     document.getElementById('cart-count').textContent = cart.count();
@@ -190,7 +190,7 @@ const FOOTER_HTML = `
   const card = (p, i = 0) => {
     const off = p.compare_at_price ? Math.round((1 - p.price / p.compare_at_price) * 100) : 0;
     const url = `produto.html?id=${encodeURIComponent(p.id)}`;
-    const img = p.images && p.images[0];
+    const img = safeImg(p.images && p.images[0]);
     return `
     <article class="card reveal" style="transition-delay:${(i % 4) * 70}ms">
       <a href="${url}" class="card__media" aria-label="${esc(p.name)}">
@@ -203,7 +203,7 @@ const FOOTER_HTML = `
       <a href="${url}" class="btn btn--primary card__add">Ver detalhes</a>
       <div class="card__body">
         <h3 class="card__name"><a href="${url}">${esc(p.name)}</a></h3>
-        <div class="swatches">${(p.colors || []).map(c => `<i style="background:${esc(c.hex)}" title="${esc(c.name)}"></i>`).join('')}</div>
+        <div class="swatches">${(p.colors || []).map(c => `<i style="background:${safeHex(c.hex)}" title="${esc(c.name)}"></i>`).join('')}</div>
         <div class="price">${p.compare_at_price ? `<del>${brl(p.compare_at_price)}</del>` : ''}<strong>${brl(p.price)}</strong></div>
         <div class="inst">ou ${cfg.installments}x de ${brl(p.price / cfg.installments)} sem juros</div>
         <div class="pix">${brl(p.price * (1 - cfg.pixDiscount))} no Pix</div>

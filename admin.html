@@ -3,6 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: blob: https://pfzuuypvagzztfpwjqyz.supabase.co; connect-src 'self' https://pfzuuypvagzztfpwjqyz.supabase.co wss://pfzuuypvagzztfpwjqyz.supabase.co; object-src 'none'; base-uri 'self'; form-action 'self'; frame-src 'none'; manifest-src 'self'; upgrade-insecure-requests">
+<meta name="referrer" content="strict-origin-when-cross-origin">
 <meta name="robots" content="noindex">
 <title>Painel Rêve Lux</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -10,7 +12,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Great+Vibes&family=Jost:wght@300;400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/css/style.css">
 <link rel="stylesheet" href="assets/css/admin.css">
-<script>try{var t=localStorage.getItem('rl-theme');if(t)document.documentElement.dataset.theme=t;}catch(e){}</script>
+<script src="assets/js/theme-init.js"></script>
 </head>
 <body class="admin">
 
@@ -19,8 +21,8 @@
   <form class="login__card" id="login-form" novalidate>
     <span class="brand"><span class="brand__name">Rêve Lux</span><svg class="brand__star" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5c.5 4.6 2.6 7.6 8.5 9.5-5.9 1.9-8 4.9-8.5 9.5-.5-4.6-2.6-7.6-8.5-9.5 5.9-1.9 8-4.9 8.5-9.5z"/></svg></span>
     <p class="eyebrow">Área do lojista</p>
-    <label class="field"><span>E-mail</span><input id="login-email" type="email" autocomplete="username" required></label>
-    <label class="field"><span>Senha</span><input id="login-pass" type="password" autocomplete="current-password" required></label>
+    <label class="field"><span>E-mail</span><input id="login-email" type="email" autocomplete="username" required maxlength="254"></label>
+    <label class="field"><span>Senha</span><input id="login-pass" type="password" autocomplete="current-password" required maxlength="128"></label>
     <p class="form-error" id="login-error" role="alert"></p>
     <button class="btn btn--primary btn--block">Entrar</button>
     <p class="muted login__hint" id="login-hint"></p>
@@ -43,25 +45,63 @@
   </header>
 
   <main class="panel__main">
-    <div class="panel__head">
-      <div><p class="eyebrow">Catálogo</p><h1>Produtos</h1></div>
-      <button class="btn btn--primary" id="new-btn">+ Novo produto</button>
-    </div>
+    <nav class="tabs" role="tablist" aria-label="Seções do painel">
+      <button role="tab" aria-selected="true" data-tab="produtos">Produtos</button>
+      <button role="tab" aria-selected="false" data-tab="pedidos">Pedidos</button>
+      <button role="tab" aria-selected="false" data-tab="clientes">Clientes</button>
+      <button role="tab" aria-selected="false" data-tab="auditoria">Auditoria</button>
+    </nav>
 
-    <div class="stats" id="stats"></div>
+    <section data-panel="produtos">
+      <div class="panel__head">
+        <div><p class="eyebrow">Catálogo</p><h1>Produtos</h1></div>
+        <button class="btn btn--primary" id="new-btn">+ Novo produto</button>
+      </div>
+      <div class="stats" id="stats"></div>
+      <div class="toolbar">
+        <input type="search" id="filter" placeholder="Buscar por nome…" aria-label="Buscar produtos" maxlength="60">
+        <select id="filter-cat" aria-label="Filtrar por categoria"><option value="">Todas as categorias</option></select>
+        <button class="btn btn--ghost btn--sm" id="reset-demo" hidden>Restaurar catálogo de exemplo</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th><span class="sr-only">Ações</span></th></tr></thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+    </section>
 
-    <div class="toolbar">
-      <input type="search" id="filter" placeholder="Buscar por nome…" aria-label="Buscar produtos">
-      <select id="filter-cat" aria-label="Filtrar por categoria"><option value="">Todas as categorias</option></select>
-      <button class="btn btn--ghost btn--sm" id="reset-demo" hidden>Restaurar catálogo de exemplo</button>
-    </div>
+    <section data-panel="pedidos" hidden>
+      <div class="panel__head"><div><p class="eyebrow">Vendas</p><h1>Pedidos</h1></div></div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Pedido</th><th>Data</th><th>Itens</th><th>Total</th><th>Status</th><th>Rastreio</th></tr></thead>
+          <tbody id="orders"></tbody>
+        </table>
+      </div>
+    </section>
 
-    <div class="table-wrap">
-      <table class="table">
-        <thead><tr><th>Produto</th><th>Categoria</th><th>Preço</th><th>Estoque</th><th>Status</th><th><span class="sr-only">Ações</span></th></tr></thead>
-        <tbody id="rows"></tbody>
-      </table>
-    </div>
+    <section data-panel="clientes" hidden>
+      <div class="panel__head"><div><p class="eyebrow">Pessoas</p><h1>Clientes</h1></div></div>
+      <p class="muted note">Por privacidade (LGPD), o painel mostra só nome, telefone e data de cadastro. CPF e endereços ficam visíveis apenas no pedido.</p>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Nome</th><th>Telefone</th><th>Perfil</th><th>Cadastro</th></tr></thead>
+          <tbody id="customers"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section data-panel="auditoria" hidden>
+      <div class="panel__head"><div><p class="eyebrow">Segurança</p><h1>Auditoria</h1></div></div>
+      <p class="muted note">Registro automático, feito pelo banco, de toda criação, edição e exclusão de produtos, mudança de pedido e de permissão.</p>
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Quando</th><th>Ação</th><th>Tabela</th><th>Registro</th></tr></thead>
+          <tbody id="audit"></tbody>
+        </table>
+      </div>
+    </section>
   </main>
 </div>
 
@@ -72,7 +112,7 @@
     <h3 id="form-title">Novo produto</h3>
 
     <div class="editor__body">
-      <label class="field"><span>Nome *</span><input id="f-name" required maxlength="120"></label>
+      <label class="field"><span>Nome *</span><input id="f-name" required minlength="2" maxlength="120"></label>
       <div class="row2">
         <label class="field"><span>Categoria *</span><select id="f-category" required></select></label>
         <label class="field"><span>Selo</span><input id="f-tag" placeholder="Ex.: Novo, Últimas peças" maxlength="30"></label>
@@ -87,8 +127,8 @@
         <legend>Fotos</legend>
         <div class="imgs" id="f-images"></div>
         <div class="imgs__add">
-          <label class="btn btn--ghost btn--sm"><input type="file" id="f-upload" accept="image/*" multiple hidden>Enviar fotos</label>
-          <input id="f-image-url" type="url" placeholder="ou cole o link de uma imagem">
+          <label class="btn btn--ghost btn--sm"><input type="file" id="f-upload" accept="image/jpeg,image/png,image/webp,image/avif" multiple hidden>Enviar fotos</label>
+          <input id="f-image-url" type="url" placeholder="ou cole o link (https://) de uma imagem" maxlength="500">
           <button type="button" class="btn btn--ghost btn--sm" id="f-add-url">Adicionar</button>
         </div>
         <small class="muted">A primeira foto é a capa. Use fotos em 3:4 (ex.: 1200 × 1600 px).</small>
@@ -100,9 +140,9 @@
         <button type="button" class="btn btn--ghost btn--sm" id="f-add-color">+ Cor</button>
       </fieldset>
 
-      <label class="field"><span>Tamanhos (separados por vírgula)</span><input id="f-sizes" placeholder="PP, P, M, G, GG"></label>
+      <label class="field"><span>Tamanhos (separados por vírgula)</span><input id="f-sizes" placeholder="PP, P, M, G, GG" maxlength="120"></label>
       <label class="field"><span>Descrição</span><textarea id="f-description" rows="4" maxlength="2000"></textarea></label>
-      <label class="field"><span>Detalhes (um por linha)</span><textarea id="f-details" rows="4" placeholder="Tecido: linho&#10;Lavar à mão"></textarea></label>
+      <label class="field"><span>Detalhes (um por linha)</span><textarea id="f-details" rows="4" maxlength="2000" placeholder="Tecido: linho&#10;Lavar à mão"></textarea></label>
 
       <div class="toggles">
         <label><input type="checkbox" id="f-active" checked> Visível na loja</label>
@@ -124,6 +164,7 @@
 
 <script src="assets/js/config.js"></script>
 <script src="assets/js/data.js"></script>
+<script src="assets/vendor/supabase-2.45.4.min.js"></script>
 <script src="assets/js/store.js"></script>
 <script src="assets/js/admin.js"></script>
 </body>

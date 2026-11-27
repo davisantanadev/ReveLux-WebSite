@@ -53,6 +53,19 @@
   hero.addEventListener('touchend', e => { if (x0 === null) return; const dx = e.changedTouches[0].clientX - x0; if (Math.abs(dx) > 40) { show(idx + (dx < 0 ? 1 : -1)); play(); } x0 = null; });
   show(0); play();
 
+  /* ---------- Imagens do hero e newsletter (sem handlers inline, por causa da CSP) ---------- */
+  document.querySelectorAll('.hero__frame img').forEach(img => {
+    const drop = () => img.remove();
+    if (img.complete && !img.naturalWidth) drop(); else img.addEventListener('error', drop);
+  });
+  const nl = document.getElementById('newsletter-form');
+  if (nl) nl.addEventListener('submit', e => {
+    e.preventDefault();
+    const email = nl.querySelector('input[type=email]');
+    if (!email.checkValidity()) { email.reportValidity(); return; }
+    nl.querySelector('button').textContent = 'Cadastrado ♡'; email.value = '';
+  });
+
   /* ---------- Vitrines a partir do banco ---------- */
   try {
     const all = await products.list();

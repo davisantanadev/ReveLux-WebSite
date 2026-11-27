@@ -1,16 +1,14 @@
 /* Rêve Lux — configuração
-   Preencha com os dados do seu projeto Supabase (Settings → API) para usar o banco real.
-   Com os campos vazios, o site roda em "modo demonstração": produtos, sacola e favoritos
-   ficam salvos só no navegador (localStorage).
-
-   A chave "anon" é pública por definição: a segurança vem das políticas RLS
-   definidas em supabase/schema.sql. NUNCA coloque aqui a chave "service_role". */
-window.RL_CONFIG = {
-  supabaseUrl: '',      // ex.: 'https://abcd1234.supabase.co'
-  supabaseAnonKey: '',  // ex.: 'eyJhbGciOi...'
+   A chave "publishable" (antiga "anon") é PÚBLICA por definição: pode ficar no site.
+   Quem protege os dados são as políticas RLS em supabase/migrations/.
+   NUNCA coloque aqui a chave "secret"/"service_role" nem a senha do banco.
+   Para rodar em modo demonstração (sem banco), deixe supabaseUrl vazio. */
+window.RL_CONFIG = Object.freeze({
+  supabaseUrl: 'https://pfzuuypvagzztfpwjqyz.supabase.co',
+  supabaseAnonKey: 'sb_publishable_nB8o4VEbkcJjAOpsF0a6Ww_1jh1tcYS',
   storageBucket: 'product-images',
   installments: 6,      // parcelas sem juros
   pixDiscount: 0.05,    // 5% no Pix
   freeShippingFrom: 299,
-  whatsapp: '',         // ex.: '5511900000000'
-};
+  adminIdleMinutes: 30, // painel encerra a sessão após 30 min sem uso
+});
