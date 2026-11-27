@@ -243,5 +243,161 @@
     demoCredentials: useSupabase ? null : DEMO_ADMIN,
   };
 
-  window.RL = ({ cfg, mode: useSupabase ? 'supabase' : 'demo', products, admin, cart, favs, auth, brl, esc, slugify, safeHex, safeImg, cleanQuery });
+  /* ---------- Conta da cliente ---------- */
+  const DEMO_ACC_KEY = 'rl-demo-accounts';
+  const DEMO_SESSION_KEY = 'rl-demo-session';
+  const CUST_LOCK_KEY = 'rl-cust-lock';
+  const custLock = () => ls.get(CUST_LOCK_KEY, { fails: 0, until: 0 });
+  const normEmail = e => String(e || '').trim().toLowerCase().slice(0, 254);
+  const sha256 = async s => Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256', new TextEncoder().encode(String(s)))), b => b.toString(16).padStart(2, '0')).join('');
+  const demoAccounts = () => { const a = ls.get(DEMO_ACC_KEY, {}); return a && typeof a === 'object' && !Array.isArray(a) ? a : {}; };
+  const demoMe = () => { // conta logada no demo (ou erro de sessão)
+    const all = demoAccounts(); const email = ls.get(DEMO_SESSION_KEY, null);
+    if (!email || !all[email]) throw new Error('Sua sessão expirou. Entre novamente.');
+    return { all, acc: all[email] };
+  };
+  const newId = () => (crypto.randomUUID ? crypto.randomUUID() : Array.from(crypto.getRandomValues(new Uint8Array(16)), b => b.toString(16).padStart(2, '0')).join(''));
+  const ADDR_COLS = 'id,label,cep,street,number,complement,district,city,state,created_at';
+  const ADDR_FIELDS = ['label', 'cep', 'street', 'number', 'complement', 'district', 'city', 'state'];
+  const pickAddr = a => { const r = {}; ADDR_FIELDS.forEach(k => { if (a[k] !== undefined) r[k] = a[k]; }); return r; };
+  // usuário logado no Supabase (valida o token no servidor); erro se não houver sessão
+  const sbUser = async sb => {
+    const { data, error } = await sb.auth.getUser();
+    if (error || !data?.user) throw new Error('Sua sessão expirou. Entre novamente.');
+    return data.user;
+  };
+  const PROFILE_COLS = 'full_name,phone,cpf,measurements';
+
+  const account = {
+    async signUp({ name, email, password, phone }) {
+      email = normEmail(email);
+      const sb = await client();
+      if (sb) {
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, phone }, emailRedirectTo: location.origin + '/conta.html' } });
+        if (error) throw friendly(error);
+        return { needsConfirmation: !data.session };
+      }
+      const all = demoAccounts();
+      if (all[email]) throw new Error('Já existe uma conta com esse e-mail.');
+      all[email] = { id: newId(), email, passHash: await sha256(password), profile: { full_name: name || '', phone: phone || '', cpf: '', measurements: null }, addresses: [] };
+      ls.set(DEMO_ACC_KEY, all);
+      return { needsConfirmation: false };
+    },
+    lockedFor() { const s = custLock(); return Math.max(0, Math.ceil((s.until - Date.now()) / 1000)); },
+    async signIn(email, password) {
+      const wait = account.lockedFor();
+      if (wait) throw new Error(`Muitas tentativas. Aguarde ${wait}s.`);
+      email = normEmail(email);
+      const fail = () => { // mesmo bloqueio progressivo do painel, com chave própria
+        const s = custLock(); s.fails += 1;
+        if (s.fails >= 5) s.until = Date.now() + Math.min(15 * 60, 30 * 2 ** (s.fails - 5)) * 1000;
+        ls.set(CUST_LOCK_KEY, s); throw new Error('E-mail ou senha incorretos.');
+      };
+      const sb = await client();
+      if (sb) {
+        const { error } = await sb.auth.signInWithPassword({ email, password });
+        if (error) {
+          if (/not confirmed/i.test(String(error.message || ''))) throw new Error('Confirme seu e-mail antes de entrar.');
+          fail();
+        }
+      } else {
+        const acc = demoAccounts()[email];
+        if (!acc || acc.passHash !== await sha256(password)) fail();
+        ls.set(DEMO_SESSION_KEY, email);
+      }
+      ls.set(CUST_LOCK_KEY, { fails: 0, until: 0 });
+      emit('rl:account'); return { email };
+    },
+    async signOut() {
+      const sb = await client().catch(() => null);
+      if (sb) { const { error } = await sb.auth.signOut(); if (error) console.error(error); }
+      try { localStorage.removeItem(DEMO_SESSION_KEY); } catch (e) {}
+      emit('rl:account');
+    },
+    async resetPassword(email) { // sempre sucesso genérico: não revela se o e-mail existe
+      email = normEmail(email);
+      const sb = await client().catch(() => null);
+      if (sb) { try { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/conta.html' }); } catch (e) { console.error(e); } }
+    },
+    async current() {
+      const sb = await client().catch(() => null);
+      if (sb) { const { data } = await sb.auth.getUser(); return data?.user ? { id: data.user.id, email: data.user.email } : null; }
+      const email = ls.get(DEMO_SESSION_KEY, null); const acc = email && demoAccounts()[email];
+      return acc ? { id: acc.id, email: acc.email } : null;
+    },
+    async getProfile() {
+      const sb = await client();
+      if (sb) {
+        const u = await sbUser(sb);
+        const { data, error } = await sb.from('profiles').select(PROFILE_COLS).eq('id', u.id).single();
+        if (error) throw friendly(error);
+        return { full_name: data.full_name || '', phone: data.phone || '', cpf: data.cpf || '', measurements: data.measurements || null };
+      }
+      const p = demoMe().acc.profile;
+      return { full_name: p.full_name || '', phone: p.phone || '', cpf: p.cpf || '', measurements: p.measurements || null };
+    },
+    async updateProfile({ full_name, phone, cpf }) {
+      const row = { full_name, phone, cpf };
+      const sb = await client();
+      if (sb) {
+        const u = await sbUser(sb);
+        const { error } = await sb.from('profiles').update(row).eq('id', u.id);
+        if (error) throw friendly(error); return;
+      }
+      const { all, acc } = demoMe(); acc.profile = { ...acc.profile, ...row }; ls.set(DEMO_ACC_KEY, all);
+    },
+    async saveMeasures(obj) {
+      const m = {}; ['busto', 'cintura', 'quadril', 'altura'].forEach(k => { if (obj && obj[k] !== undefined) m[k] = obj[k]; });
+      const sb = await client();
+      if (sb) {
+        const u = await sbUser(sb);
+        const { error } = await sb.from('profiles').update({ measurements: m }).eq('id', u.id);
+        if (error) throw friendly(error);
+      } else {
+        const { all, acc } = demoMe(); acc.profile.measurements = m; ls.set(DEMO_ACC_KEY, all);
+      }
+      emit('rl:account', { measurements: m });
+    },
+    addresses: {
+      async list() {
+        const sb = await client();
+        if (sb) {
+          const u = await sbUser(sb); // a política deixa a dona do painel ler tudo: filtra pelo próprio usuário
+          const { data, error } = await sb.from('addresses').select(ADDR_COLS).eq('user_id', u.id).order('created_at', { ascending: false });
+          if (error) throw friendly(error); return data;
+        }
+        return demoMe().acc.addresses.slice();
+      },
+      async save(addr) {
+        const row = pickAddr(addr || {});
+        const sb = await client();
+        if (sb) {
+          const u = await sbUser(sb);
+          const q = addr.id ? sb.from('addresses').update(row).eq('id', addr.id) : sb.from('addresses').insert({ ...row, user_id: u.id });
+          const { data, error } = await q.select(ADDR_COLS).single();
+          if (error) throw friendly(error); return data;
+        }
+        const { all, acc } = demoMe(); let out;
+        if (addr.id) {
+          const i = acc.addresses.findIndex(a => a.id === addr.id);
+          if (i < 0) throw new Error('Endereço não encontrado.');
+          out = acc.addresses[i] = { ...acc.addresses[i], ...row };
+        } else { out = { id: newId(), created_at: new Date().toISOString(), ...row }; acc.addresses.unshift(out); }
+        ls.set(DEMO_ACC_KEY, all); return out;
+      },
+      async remove(id) {
+        const sb = await client();
+        if (sb) { await sbUser(sb); const { error } = await sb.from('addresses').delete().eq('id', id); if (error) throw friendly(error); return; }
+        const { all, acc } = demoMe(); acc.addresses = acc.addresses.filter(a => a.id !== id); ls.set(DEMO_ACC_KEY, all);
+      },
+    },
+    async orders() {
+      const sb = await client(); if (!sb) return [];
+      const u = await sbUser(sb);
+      const { data, error } = await sb.from('orders').select('id,status,total,payment_method,tracking_code,created_at,order_items(name,qty,size,color)').eq('user_id', u.id).order('created_at', { ascending: false }).limit(50);
+      if (error) throw friendly(error); return data;
+    },
+  };
+
+  window.RL = ({ cfg, mode: useSupabase ? 'supabase' : 'demo', products, admin, cart, favs, auth, account, brl, esc, slugify, safeHex, safeImg, cleanQuery });
 })();
