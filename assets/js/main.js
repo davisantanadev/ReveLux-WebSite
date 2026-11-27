@@ -4,8 +4,11 @@
   const { products, card, reveal } = window.RL;
 
   /* ---------- Categorias (cada círculo abre o catálogo filtrado) ---------- */
-  document.getElementById('cats').innerHTML = window.RL_CATEGORIES
-    .map(c => `<li id="cat-${c.slug}"><a href="catalogo.html?cat=${c.slug}"><div class="ph"></div>${c.name}</a></li>`).join('');
+  // Foto em assets/img/categorias/cat-<slug>.jpg por cima do placeholder (.ph); se o arquivo não existir, a img some e o degradê fica.
+  const catsEl = document.getElementById('cats');
+  catsEl.innerHTML = window.RL_CATEGORIES
+    .map(c => `<li id="cat-${c.slug}"><a href="catalogo.html?cat=${c.slug}"><div class="ph"><img src="assets/img/categorias/cat-${c.slug}.jpg" alt="Peças da categoria ${c.name}" width="800" height="800" loading="lazy"></div>${c.name}</a></li>`).join('');
+  catsEl.addEventListener('error', e => { if (e.target.tagName === 'IMG') e.target.remove(); }, true); // 'error' não borbulha: captura (sem inline handler, por causa da CSP)
   document.getElementById('insta').innerHTML = Array.from({ length: 6 },
     () => `<a href="https://www.instagram.com/reveluxmoda/" target="_blank" rel="noopener" aria-label="Post do Instagram"><div class="ph"></div></a>`).join('');
 

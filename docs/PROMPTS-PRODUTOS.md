@@ -83,8 +83,8 @@ Output each image separately, labeled with its file name.
 ## Onde cada imagem entra
 | Arquivos | Onde usar |
 |---|---|
-| A1–A14 | Painel → editar o produto → Fotos. A primeira foto é a capa; o `-2` entra como segunda foto, na galeria da página do produto |
-| B1–B6 | Círculos de "Compre por categoria" na home |
+| A1–A14 | Salvar em `assets/img/produtos/` (já no código para os gerados; os demais pelo painel → editar o produto → Fotos). A primeira foto é a capa; o `-2` entra como segunda foto, na galeria da página do produto |
+| B1–B6 | Salvar em `assets/img/categorias/` (`cat-<slug>.jpg`; carrega sozinho). Círculos de "Compre por categoria" na home |
 | C1–C6 | Grade "Siga no Instagram" na home |
 
 Se o gerador limitar a quantidade de imagens por pedido, envie o bloco GLOBAL STYLE junto com uma seção por vez (A, B, C).
