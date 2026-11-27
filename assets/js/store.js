@@ -351,6 +351,10 @@
       }
       const { all, acc } = demoMe(); acc.passHash = await sha256(newPassword); ls.set(DEMO_ACC_KEY, all);
     },
+    hasLocalSession() { // só para rótulos: olha a sessão guardada, sem rede e sem validar no servidor
+      if (useSupabase) { const s = ls.get('rl-auth', null); return !!(s && typeof s === 'object' && s.access_token); }
+      return !!ls.get(DEMO_SESSION_KEY, null);
+    },
     async current() {
       const sb = await client().catch(() => null);
       if (sb) { const { data } = await sb.auth.getUser(); return data?.user ? { id: data.user.id, email: data.user.email } : null; }

@@ -113,9 +113,9 @@ const FOOTER_HTML = `
     + '<li><a href="conta.html" id="account-drawer-link">Entrar</a></li>';
 
   /* ---------- Conta: rótulo do ícone conforme a sessão ---------- */
-  const renderAccount = async () => {
+  const renderAccount = () => { // sessão local, sem rede: getUser() fica só em conta.js
     let logged = false;
-    try { logged = !!(window.RL.account && await window.RL.account.current()); } catch (e) {}
+    try { logged = !!(window.RL.account && window.RL.account.hasLocalSession()); } catch (e) {}
     const label = logged ? 'Minha conta' : 'Entrar';
     const icon = document.getElementById('account-link'); if (icon) icon.setAttribute('aria-label', label);
     const item = document.getElementById('account-drawer-link'); if (item) item.textContent = label;
