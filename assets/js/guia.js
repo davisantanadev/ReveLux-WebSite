@@ -58,12 +58,15 @@
         </div>`).join('')}
       </div>
       <button class="btn btn--primary btn--block" type="submit">Ver meu tamanho</button>
-      <div class="guide-result" aria-live="polite"></div>
+      <div class="guide-result"></div>
+      <p class="sr-only" data-guide-live aria-live="polite"></p>
     </form>`;
 
   // Sessão da cliente: { user, profile } — nunca lança.
   async function who() {
     if (!RL.account) return { user: null, profile: null };
+    // visitante sem sessão guardada: nem baixa o supabase-js
+    if (typeof RL.account.hasLocalSession === 'function' && !RL.account.hasLocalSession()) return { user: null, profile: null };
     try {
       const user = await RL.account.current();
       if (!user) return { user: null, profile: null };
@@ -75,6 +78,9 @@
   // ctx: { fields, kinds: [{kind, available?}], onPick?(size), onResult?(recs) }
   function bindForm(form, ctx) {
     const out = form.querySelector('.guide-result');
+    // só este parágrafo é aria-live: o leitor anuncia o resultado, não os botões
+    const live = form.querySelector('[data-guide-live]');
+    const say = t => { live.textContent = t || ''; };
     let auth = { user: null, profile: null };
     let last = null; // { value, recs }
 
@@ -87,14 +93,16 @@
     });
 
     function render(note = '') {
-      if (!last) { out.innerHTML = ''; return; }
-      let html;
+      if (!last) { out.innerHTML = ''; say(''); return; }
+      let html, text;
       if (last.recs.length === 1) {
         const r = last.recs[0].rec;
         html = r
           ? `<p class="guide-result__size">Indicamos o tamanho <strong>${esc(r.size)}</strong></p>${FIT[r.fit] ? `<p class="guide-result__fit">${FIT[r.fit]}</p>` : ''}`
           : '<p class="guide-result__msg">Não conseguimos indicar um tamanho desta peça para essas medidas.</p>';
+        text = r ? `Indicamos o tamanho ${r.size}.${FIT[r.fit] ? ' ' + FIT[r.fit] : ''}` : 'Não conseguimos indicar um tamanho desta peça para essas medidas.';
       } else {
+        text = last.recs.map(k => `${KIND_TITLE[k.kind]}: ${k.rec ? `tamanho ${k.rec.size}.${FIT[k.rec.fit] ? ' ' + FIT[k.rec.fit] : ''}` : 'informe cintura ou quadril.'}`).join(' ');
         html = `<ul class="guide-result__list">${last.recs.map(k => `<li><span>${esc(KIND_TITLE[k.kind])}</span>${k.rec
           ? `<span>Indicamos o tamanho <strong>${esc(k.rec.size)}</strong>${FIT[k.rec.fit] ? ` · ${FIT[k.rec.fit]}` : ''}</span>`
           : '<span class="muted">Informe cintura ou quadril.</span>'}</li>`).join('')}</ul>`;
@@ -105,19 +113,20 @@
       if (auth.user) acts.push('<button type="button" class="btn btn--ghost btn--block" data-act="save">Salvar minhas medidas</button>');
       else acts.push('<a class="link" href="conta.html">Entre para salvar suas medidas</a>');
       out.innerHTML = `${html}<div class="guide-result__acts">${acts.join('')}</div><p class="guide-result__status">${esc(note)}</p>`;
+      say(note ? `${text} ${note}` : text);
     }
 
     function run(focusError) {
       const r = V.measures(read());
       if (!r.ok) {
-        showErrors(r.errors); last = null; out.innerHTML = '';
+        showErrors(r.errors); last = null; out.innerHTML = ''; say('');
         if (ctx.onResult) ctx.onResult([]);
         if (focusError) { const bad = ctx.fields.find(f => r.errors[f]); if (bad) input(bad).focus(); }
         return;
       }
       showErrors({});
       if (!Object.keys(r.value).length) {
-        last = null; out.innerHTML = '<p class="guide-result__msg">Informe ao menos uma medida.</p>';
+        last = null; out.innerHTML = '<p class="guide-result__msg">Informe ao menos uma medida.</p>'; say('Informe ao menos uma medida.');
         if (ctx.onResult) ctx.onResult([]);
         return;
       }
@@ -141,9 +150,9 @@
         try {
           await RL.account.saveMeasures(m);
           auth.profile = { ...(auth.profile || {}), measurements: m };
-          st.textContent = 'Suas medidas foram salvas.';
+          st.textContent = 'Suas medidas foram salvas.'; say(st.textContent);
         } catch (err) {
-          st.textContent = (err && err.message) || 'Não foi possível salvar agora. Tente de novo.';
+          st.textContent = (err && err.message) || 'Não foi possível salvar agora. Tente de novo.'; say(st.textContent);
         }
         b.disabled = false;
       }
@@ -211,7 +220,8 @@
     const kind = M.guideFor(opts.category, opts.sizes);
     if (!kind) return;
     ensurePanel();
-    if (!isOpen()) opener = document.activeElement;
+    // Safari não foca links no clique: quem abriu passa o elemento em opts.opener
+    if (!isOpen()) opener = opts.opener || document.activeElement;
     const seq = ++openSeq;
     const fields = M.fieldsFor(kind, opts.category);
     const sizes = Array.isArray(opts.sizes) ? opts.sizes : null;

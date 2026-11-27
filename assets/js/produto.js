@@ -76,8 +76,12 @@
   const fitHint = async () => {
     const el = $('#fit-hint'); if (!el || !guideKind || !account || !RL_VALID) return;
     let m = null;
-    try { if (await account.current()) m = (await account.getProfile()).measurements; } catch (e) { m = null; }
-    const v = m ? RL_VALID.measures({ busto: m.busto, cintura: m.cintura, quadril: m.quadril }) : null;
+    // sem sessão guardada: não consulta a conta (nem baixa o supabase-js)
+    const logged = typeof account.hasLocalSession !== 'function' || account.hasLocalSession();
+    try { if (logged && await account.current()) m = (await account.getProfile()).measurements; } catch (e) { m = null; }
+    // mesmas medidas que o guia desta peça usa (saia: só cintura e quadril, sem busto)
+    const fields = RL_MEDIDAS.fieldsFor(guideKind, p.category);
+    const v = m ? RL_VALID.measures(fields.reduce((o, f) => (o[f] = m[f], o), {})) : null;
     const r = v && v.ok ? RL_MEDIDAS.recommendSize(guideKind, v.value, sizes) : null;
     el.textContent = r ? `Seu tamanho: ${r.size}` : '';
     el.hidden = !r;
@@ -96,7 +100,7 @@
     if (t.dataset.q) { sel.qty = Math.max(1, Math.min(p.stock || 99, sel.qty + +t.dataset.q)); $('#qty').textContent = sel.qty; }
     if (t.classList.contains('pdp__guide')) {
       e.preventDefault();
-      RL_GUIA.open({ category: p.category, sizes, name: p.name, onPick: selectSize });
+      RL_GUIA.open({ category: p.category, sizes, name: p.name, onPick: selectSize, opener: t });
     }
     if (t.id === 'add') {
       const miss = [colors.length && !sel.color && 'a cor', sizes.length && !sel.size && 'o tamanho'].filter(Boolean);

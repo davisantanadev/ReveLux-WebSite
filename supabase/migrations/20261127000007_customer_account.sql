@@ -21,6 +21,9 @@ language sql immutable set search_path = '' as $$
 $$;
 revoke execute on function private.valid_measurements(jsonb) from public, anon;
 grant execute on function private.valid_measurements(jsonb) to authenticated;
+-- service_role também atualiza profiles (Edge Functions): o CHECK precisa poder chamar a função.
+grant execute on function private.valid_measurements(jsonb) to service_role;
+grant usage on schema private to service_role;
 grant usage on schema private to authenticated;
 
 alter table public.profiles drop constraint if exists profiles_measurements_check;

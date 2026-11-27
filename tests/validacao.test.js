@@ -25,6 +25,13 @@ test('signup rejeita senha so com letras, curta ou sem letra', () => {
   assert.ok(V.signup({ ...okSignup, password: '12345678' }).errors.password);
 });
 
+test('signup limita a senha a 72 caracteres', () => {
+  const ok72 = 'a1' + 'b'.repeat(70);
+  assert.equal(ok72.length, 72);
+  assert.equal(V.signup({ ...okSignup, password: ok72 }).ok, true);
+  assert.equal(V.signup({ ...okSignup, password: ok72 + 'c' }).errors.password, 'Use no máximo 72 caracteres.');
+});
+
 test('signup exige consentimento true', () => {
   const r = V.signup({ ...okSignup, consent: false });
   assert.equal(r.ok, false);

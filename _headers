@@ -16,3 +16,8 @@
 /conta.html
   X-Robots-Tag: noindex
   Cache-Control: no-store
+
+# Cloudflare Pages serve conta.html também em /conta (sem .html)
+/conta
+  X-Robots-Tag: noindex
+  Cache-Control: no-store

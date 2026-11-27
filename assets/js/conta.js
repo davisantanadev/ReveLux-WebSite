@@ -12,16 +12,28 @@
   const fieldEl = (form, name) => form.querySelector(`[name="${name}"]`);
   const formMsg = form => form.querySelector('.form__msg');
 
+  const clearFieldError = inp => {
+    if (!inp || !inp.id || inp.getAttribute('aria-invalid') !== 'true') return;
+    inp.removeAttribute('aria-invalid');
+    const err = $(inp.id + '-err');
+    if (err) { err.hidden = true; err.textContent = ''; }
+    const ids = (inp.getAttribute('aria-describedby') || '').split(' ').filter(x => x && x !== inp.id + '-err');
+    if (ids.length) inp.setAttribute('aria-describedby', ids.join(' ')); else inp.removeAttribute('aria-describedby');
+  };
+
   const clearErrors = form => {
-    form.querySelectorAll('[aria-invalid="true"]').forEach(inp => {
-      inp.removeAttribute('aria-invalid');
-      const err = $(inp.id + '-err');
-      if (err) { err.hidden = true; err.textContent = ''; }
-      const ids = (inp.getAttribute('aria-describedby') || '').split(' ').filter(x => x && x !== inp.id + '-err');
-      if (ids.length) inp.setAttribute('aria-describedby', ids.join(' ')); else inp.removeAttribute('aria-describedby');
-    });
+    form.querySelectorAll('[aria-invalid="true"]').forEach(clearFieldError);
     const m = formMsg(form); if (m) { m.hidden = true; m.textContent = ''; }
   };
+
+  // limpa o erro do campo assim que a cliente volta a editá-lo
+  document.querySelectorAll('form').forEach(f => {
+    f.addEventListener('input', e => clearFieldError(e.target));
+    f.addEventListener('change', e => { if (e.target.type === 'checkbox') clearFieldError(e.target); });
+  });
+
+  const DEFAULT_ERR = 'Não foi possível concluir. Tente de novo.';
+  const errText = e => (e && e.message) || DEFAULT_ERR;
 
   const showErrors = (form, errors) => {
     let first = null;
@@ -50,7 +62,7 @@
     const label = btn.textContent;
     btn.disabled = true; btn.textContent = 'Aguarde…'; form.setAttribute('aria-busy', 'true');
     try { await fn(); }
-    catch (e) { showFormError(form, (e && e.message) || 'Não foi possível concluir. Tente de novo.'); }
+    catch (e) { showFormError(form, errText(e)); }
     finally { btn.disabled = false; btn.textContent = label; form.removeAttribute('aria-busy'); }
   };
 
@@ -60,18 +72,27 @@
     return o;
   };
 
-  /* ---------- Mostrar/ocultar senha ---------- */
+  /* ---------- Mostrar/ocultar senha (só troca o texto; sem aria-pressed para não anunciar em dobro) ---------- */
+  const resetPassToggles = root => root.querySelectorAll('[data-toggle-pass]').forEach(btn => {
+    const inp = $(btn.dataset.togglePass); if (inp) inp.type = 'password';
+    btn.textContent = 'Mostrar';
+  });
   document.querySelectorAll('[data-toggle-pass]').forEach(btn => btn.addEventListener('click', () => {
     const inp = $(btn.dataset.togglePass);
     const show = inp.type === 'password';
     inp.type = show ? 'text' : 'password';
     btn.textContent = show ? 'Ocultar' : 'Mostrar';
-    btn.setAttribute('aria-pressed', String(show));
   }));
 
   /* ---------- Abas (padrão WAI-ARIA: setas, Home e End) ---------- */
   const tabs = [...document.querySelectorAll('[role="tab"]')];
+  // depois de "Enviamos um link", trocar de aba devolve o formulário (para corrigir o e-mail e reenviar)
+  const resetDone = () => [['form-signup', 'signup-done'], ['form-forgot', 'forgot-done']].forEach(([f, d]) => {
+    $(f).hidden = false; $(d).hidden = true;
+  });
   const selectTab = (tab, focus) => {
+    const changed = tab.getAttribute('aria-selected') !== 'true';
+    if (changed) resetDone();
     tabs.forEach(t => {
       const on = t === tab;
       t.setAttribute('aria-selected', String(on));
@@ -124,7 +145,7 @@
     const r = V.signup(values(fSignup));
     if (!r.ok) return showErrors(fSignup, r.errors);
     withBusy(fSignup, async () => {
-      const { needsConfirmation } = await account.signUp(r.value);
+      const { needsConfirmation } = await account.signUp(r.value); // r.value.consent === true (registrado no cadastro)
       if (needsConfirmation) {
         fSignup.reset(); fSignup.hidden = true;
         const done = $('signup-done'); done.hidden = false; done.focus();
@@ -260,7 +281,7 @@
 
   const loadAddrs = async () => {
     try { addrs = await account.addresses.list(); renderAddrs(); }
-    catch (e) { $('addr-list').innerHTML = `<li class="form__msg">${esc(e.message)}</li>`; }
+    catch (e) { $('addr-list').innerHTML = `<li class="form__msg">${esc(errText(e))}</li>`; }
   };
 
   const openAddrForm = a => {
@@ -306,7 +327,7 @@
     if (yes) {
       yes.disabled = true; yes.textContent = 'Aguarde…';
       try { await account.addresses.remove(a.id); await loadAddrs(); toast('Endereço removido.'); btnNew.focus(); }
-      catch (err) { toast(err.message); yes.disabled = false; yes.textContent = 'Sim, remover'; }
+      catch (err) { toast(errText(err)); yes.disabled = false; yes.textContent = 'Sim, remover'; }
     }
   });
   $('addr-list').addEventListener('keydown', e => {
@@ -335,14 +356,30 @@
           <ul class="order__items muted">${(o.order_items || []).map(i => `<li>${esc(i.qty)}× ${esc(i.name)}${[i.color, i.size && 'Tam. ' + i.size].filter(Boolean).map(x => ' · ' + esc(x)).join('')}</li>`).join('')}</ul>
           ${o.tracking_code ? `<p class="muted">Rastreio: ${esc(o.tracking_code)}</p>` : ''}
         </li>`).join('') + '</ul>';
-    } catch (e) { box.innerHTML = `<p class="form__msg">${esc(e.message)}</p>`; }
+    } catch (e) { box.innerHTML = `<p class="form__msg">${esc(errText(e))}</p>`; }
   };
 
   /* ---------- Sair ---------- */
+  // tira do DOM os dados da conta (computador compartilhado: nada fica legível pelas devtools)
+  const clearUserView = () => {
+    [fProfile, fMeasures, fAddr].forEach(f => { clearErrors(f); f.reset(); });
+    MEASURE_KEYS.forEach(k => { $('ms-' + k).value = ''; });
+    ['pf-email', 'pf-name', 'pf-phone', 'pf-cpf'].forEach(k => { $(k).value = ''; });
+    fAddr.elements.id.value = '';
+    fAddr.hidden = true; btnNew.setAttribute('aria-expanded', 'false');
+    addrs = [];
+    $('addr-list').innerHTML = '';
+    $('orders').innerHTML = '';
+    $('hello').textContent = 'Olá';
+    $('size-hint').textContent = '';
+    const um = $('user-msg'); um.textContent = ''; um.hidden = true;
+    resetDone();
+    document.querySelectorAll('#conta-guest form, #form-recovery').forEach(f => { clearErrors(f); f.reset(); resetPassToggles(f); });
+  };
   $('btn-logout').addEventListener('click', async () => {
     const b = $('btn-logout'); b.disabled = true;
     try { await account.signOut(); } finally { b.disabled = false; }
-    fAddr.hidden = true; btnNew.setAttribute('aria-expanded', 'false');
+    clearUserView();
     showGuest('tab-entrar');
     $('tab-entrar').focus();
     toast('Você saiu da conta.');
@@ -353,7 +390,7 @@
     if (!user) return showGuest('tab-entrar');
     let p;
     try { p = await account.getProfile(); }
-    catch (e) { return showGuest('tab-entrar', e.message); }
+    catch (e) { return showGuest('tab-entrar', errText(e)); }
     fillProfile(user, p);
     const um = $('user-msg'); um.textContent = notice || ''; um.hidden = !notice;
     $('conta-loading').hidden = true;

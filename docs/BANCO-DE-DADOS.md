@@ -57,6 +57,13 @@ O projeto **ReveLux** (`pfzuuypvagzztfpwjqyz`) está ligado. Em 27/11/2026 as mi
    ```
 3. Entre em `admin.html` com esse e-mail e essa senha.
 
+### Supabase Auth → URL Configuration (falta fazer)
+Em **Authentication → URL Configuration**, defina a **Site URL** como `https://<domínio>` e inclua em **Redirect URLs**:
+- `https://<domínio>/conta.html` (produção);
+- `http://localhost:5173/conta.html` (teste local).
+
+Os e-mails de confirmação de cadastro e de "esqueci a senha" voltam para `conta.html`. Se esse endereço não estiver na lista, o Supabase manda a cliente para a Site URL (a home): ela entra logada, mas nunca vê a tela "Criar nova senha", que só existe em `conta.html`.
+
 ### Aplicar novas migrações
 - **Pelo SQL Editor:** cole o arquivo e rode.
 - **Pela linha de comando:** `SUPABASE_ACCESS_TOKEN=... ./supabase/run-sql.sh supabase/migrations/<arquivo>.sql`.

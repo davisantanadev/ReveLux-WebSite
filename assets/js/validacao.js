@@ -48,6 +48,8 @@
     if (email.length > 254 || !/^[^\s@]+@[^\s@.]+(\.[^\s@.]+)+$/.test(email)) e.email = 'Informe um e-mail válido';
     if (password.length < 8 || !/[A-Za-z]/.test(password) || !/\d/.test(password)) {
       e.password = 'A senha precisa de 8 caracteres, com letra e número';
+    } else if (password.length > 72) {
+      e.password = 'Use no máximo 72 caracteres.'; // limite do bcrypt no Supabase Auth
     }
     if (!tel) e.phone = 'Informe um telefone com DDD';
     if (d.consent !== true) e.consent = 'Aceite a política de privacidade';

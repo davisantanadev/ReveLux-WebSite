@@ -33,7 +33,15 @@
   /* ---------- Supabase client (carregado sob demanda) ---------- */
   let clientP = null;
   // cliente chegou pelo link de recuperação de senha (o Supabase limpa o hash da URL, então lemos já ao carregar)
+  // o flag também vai para o sessionStorage: recarregar a página no meio da troca de senha não perde o formulário
+  const RECOVERY_KEY = 'rl-recovery';
+  const recoveryFlag = {
+    get() { try { return sessionStorage.getItem(RECOVERY_KEY) === '1'; } catch (e) { return false; } },
+    set() { try { sessionStorage.setItem(RECOVERY_KEY, '1'); } catch (e) {} },
+    clear() { try { sessionStorage.removeItem(RECOVERY_KEY); } catch (e) {} },
+  };
   let recovery = useSupabase && /[#&]type=recovery(&|$)/.test(location.hash || '');
+  if (recovery) recoveryFlag.set();
   const client = () => {
     if (!useSupabase) return Promise.resolve(null);
     if (!clientP) clientP = new Promise((res, rej) => {
@@ -41,7 +49,7 @@
         const c = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey, {
           auth: { persistSession: true, autoRefreshToken: true, storageKey: 'rl-auth' },
         });
-        c.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') recovery = true; });
+        c.auth.onAuthStateChange(ev => { if (ev === 'PASSWORD_RECOVERY') { recovery = true; recoveryFlag.set(); } });
         res(c);
       };
       if (window.supabase) return done();
@@ -283,19 +291,23 @@
     return data.user;
   };
   const PROFILE_COLS = 'full_name,phone,cpf,measurements';
+  const PRIVACY_VERSION = '2026-11-27'; // versão da política de privacidade aceita no cadastro
 
   const account = {
-    async signUp({ name, email, password, phone }) {
+    async signUp({ name, email, password, phone, consent }) {
+      if (consent !== true) throw new Error('Aceite a política de privacidade.');
       email = normEmail(email);
+      // registro do aceite (LGPD art. 8 §2): quando e qual versão da política
+      const privacy = { privacy_accepted_at: new Date().toISOString(), privacy_version: PRIVACY_VERSION };
       const sb = await client();
       if (sb) {
-        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, phone }, emailRedirectTo: location.origin + '/conta.html' } });
+        const { data, error } = await sb.auth.signUp({ email, password, options: { data: { full_name: name, phone, ...privacy }, emailRedirectTo: location.origin + '/conta.html' } });
         if (error) throw friendly(error);
         return { needsConfirmation: !data.session };
       }
       const all = demoAccounts();
       if (all[email]) throw new Error('Já existe uma conta com esse e-mail.');
-      all[email] = { id: newId(), email, passHash: await sha256(password), profile: { full_name: name || '', phone: phone || '', cpf: '', measurements: {} }, addresses: [] };
+      all[email] = { id: newId(), email, passHash: await sha256(password), profile: { full_name: name || '', phone: phone || '', cpf: '', measurements: {}, ...privacy }, addresses: [] };
       ls.set(DEMO_ACC_KEY, all);
       return { needsConfirmation: false };
     },
@@ -330,6 +342,7 @@
       const sb = await client().catch(() => null);
       if (sb) { const { error } = await sb.auth.signOut(); if (error) console.error(error); }
       try { localStorage.removeItem(DEMO_SESSION_KEY); } catch (e) {}
+      recovery = false; recoveryFlag.clear();
       emit('rl:account');
     },
     async resetPassword(email) { // sempre sucesso genérico: não revela se o e-mail existe
@@ -338,6 +351,7 @@
       if (sb) { try { await sb.auth.resetPasswordForEmail(email, { redirectTo: location.origin + '/conta.html' }); } catch (e) { console.error(e); } }
     },
     async recoveryPending() { // true quando a cliente chegou pelo link de "esqueci a senha"
+      if (recoveryFlag.get()) return true; // recarregou a página no meio da troca de senha
       if (!useSupabase) return false;
       await client().catch(() => null); // garante o listener PASSWORD_RECOVERY registrado
       return recovery;
@@ -347,9 +361,10 @@
       if (sb) {
         const { error } = await sb.auth.updateUser({ password: newPassword });
         if (error) throw friendly(error);
-        recovery = false; return;
+      } else {
+        const { all, acc } = demoMe(); acc.passHash = await sha256(newPassword); ls.set(DEMO_ACC_KEY, all);
       }
-      const { all, acc } = demoMe(); acc.passHash = await sha256(newPassword); ls.set(DEMO_ACC_KEY, all);
+      recovery = false; recoveryFlag.clear();
     },
     hasLocalSession() { // só para rótulos: olha a sessão guardada, sem rede e sem validar no servidor
       if (useSupabase) { const s = ls.get('rl-auth', null); return !!(s && typeof s === 'object' && s.access_token); }
