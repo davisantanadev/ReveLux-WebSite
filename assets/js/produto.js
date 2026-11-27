@@ -1,6 +1,6 @@
 /* Rêve Lux — página de produto (produto.html?id=slug) */
 (async () => {
-  const { products, cart, favs, card, reveal, toast, openDrawer, brl, esc, cfg } = window.RL;
+  const { products, cart, favs, card, reveal, toast, openDrawer, brl, esc, cfg, safeHex, safeImg } = window.RL;
   const id = new URLSearchParams(location.search).get('id');
   const box = document.getElementById('pdp');
   const p = id ? await products.get(id).catch(() => null) : null;
@@ -16,7 +16,7 @@
   document.getElementById('crumb-name').textContent = p.name;
   if (cat) { const a = document.getElementById('crumb-cat'); a.textContent = cat.name; a.href = `catalogo.html?cat=${cat.slug}`; }
 
-  const imgs = p.images && p.images.length ? p.images : [null];
+  const imgs = (p.images || []).map(safeImg).filter(Boolean); if (!imgs.length) imgs.push(null);
   const colors = p.colors || [], sizes = p.sizes || [];
   const sel = { color: colors.length === 1 ? colors[0].name : '', size: sizes.length === 1 ? sizes[0] : '', qty: 1, img: 0 };
   const off = p.compare_at_price ? Math.round((1 - p.price / p.compare_at_price) * 100) : 0;
@@ -36,7 +36,7 @@
       <p class="inst">ou ${cfg.installments}x de ${brl(p.price / cfg.installments)} sem juros · <span class="pix">${brl(p.price * (1 - cfg.pixDiscount))} no Pix</span></p>
 
       ${colors.length ? `<fieldset class="opt"><legend>Cor: <strong id="sel-color">${esc(sel.color || 'escolha')}</strong></legend>
-        <div class="opt__colors">${colors.map(c => `<button type="button" class="swatch" data-color="${esc(c.name)}" aria-pressed="${sel.color === c.name}" aria-label="${esc(c.name)}" style="--c:${esc(c.hex)}"></button>`).join('')}</div></fieldset>` : ''}
+        <div class="opt__colors">${colors.map(c => `<button type="button" class="swatch" data-color="${esc(c.name)}" aria-pressed="${sel.color === c.name}" aria-label="${esc(c.name)}" style="--c:${safeHex(c.hex)}"></button>`).join('')}</div></fieldset>` : ''}
 
       ${sizes.length ? `<fieldset class="opt"><legend>Tamanho: <strong id="sel-size">${esc(sel.size || 'escolha')}</strong> <a href="#" class="link pdp__guide">Guia de medidas</a></legend>
         <div class="opt__sizes">${sizes.map(s => `<button type="button" class="size" data-size="${esc(s)}" aria-pressed="${sel.size === s}">${esc(s)}</button>`).join('')}</div></fieldset>` : ''}

@@ -45,20 +45,26 @@ order_items   order_id, product_id, name, color, size, unit_price, qty
 storage       bucket público "product-images" (só admin envia)
 ```
 
-## Como ligar o site ao Supabase (cerca de 10 minutos)
-1. Crie um projeto em https://supabase.com, na região **South America (São Paulo)**.
-2. Abra o **SQL Editor**, cole `supabase/schema.sql` e rode.
-3. Ainda no SQL Editor, rode `supabase/seed.sql` se quiser os produtos de exemplo.
-4. Em **Authentication → Users → Add user**, crie a conta da dona da loja.
-5. No SQL Editor, transforme essa conta em admin:
+## Situação atual: conectado
+O projeto **ReveLux** (`pfzuuypvagzztfpwjqyz`) está ligado. Em 27/11/2026 as migrações de `supabase/migrations/` foram aplicadas: esquema, catálogo de exemplo (9 produtos), vitrine pública e reforço das funções. O `assets/js/config.js` já tem a URL e a chave *publishable*, que é pública por definição.
+
+### Criar a conta da administradora (falta fazer)
+1. No Supabase, vá em **Authentication → Users → Add user → Create new user**, informe e-mail e senha forte e marque *Auto Confirm User*.
+2. No **SQL Editor**, rode trocando o e-mail:
    ```sql
    update public.profiles set role = 'admin'
    where id = (select id from auth.users where email = 'email-da-dona@exemplo.com');
    ```
-6. Em **Settings → API**, copie a *Project URL* e a *anon public key* para `assets/js/config.js`.
-7. Pronto: o painel `admin.html` passa a gravar no banco, e as fotos vão para o Storage.
+3. Entre em `admin.html` com esse e-mail e essa senha.
 
-Enquanto o `config.js` estiver vazio, o site roda em **modo demonstração**: tudo funciona, mas fica salvo só no navegador. O login de teste do painel é `admin@revelux.com` com a senha `revelux123`.
+### Aplicar novas migrações
+- **Pelo SQL Editor:** cole o arquivo e rode.
+- **Pela linha de comando:** `SUPABASE_ACCESS_TOKEN=... ./supabase/run-sql.sh supabase/migrations/<arquivo>.sql`.
+- **Pela CLI:** `supabase link --project-ref pfzuuypvagzztfpwjqyz` e depois `supabase db push`.
+
+Para voltar ao modo demonstração, deixe `supabaseUrl` vazio em `config.js`.
+
+Segurança em detalhes: [SEGURANCA.md](SEGURANCA.md).
 
 ## Próximos passos
 - [ ] Checkout: página de endereço e frete, e uma Edge Function `create-order` com Mercado Pago (Pix e cartão)

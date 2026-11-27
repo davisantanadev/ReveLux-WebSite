@@ -17,7 +17,7 @@ Também funciona direto no **GitHub Pages** (Settings → Pages → branch → `
 | `index.html` | Home: carrossel, categorias, vitrines Novidades e Mais vendidos, Instagram |
 | `catalogo.html` | Catálogo com busca (`?q=`), categoria (`?cat=`), favoritos (`?fav=1`) e ordenação |
 | `produto.html?id=…` | Produto: galeria, cor, tamanho, quantidade, sacola, favorito, descrição e relacionados |
-| `admin.html` | Painel do lojista: login, lista, cadastro, edição, fotos e exclusão de produtos |
+| `admin.html` | Painel do lojista: produtos (cadastro, edição, fotos, exclusão), pedidos (status, rastreio), clientes e auditoria |
 
 ## Estrutura
 ```
@@ -31,16 +31,21 @@ assets/js/produto.js   # Página de produto
 assets/js/admin.js     # Painel
 assets/css/style.css   # Tokens, temas e layout da loja
 assets/css/admin.css   # Layout do painel
-supabase/schema.sql    # Tabelas, RLS e storage
-supabase/seed.sql      # Produtos de exemplo
+supabase/migrations/   # Esquema, RLS, storage, seed e reforços (em ordem)
+supabase/run-sql.sh    # Aplica um .sql pela Management API
+assets/vendor/         # supabase-js servido localmente (CSP script-src 'self')
+vercel.json, _headers  # Cabeçalhos de segurança da hospedagem
+docs/SEGURANCA.md      # Camadas de proteção e testes
 docs/BANCO-DE-DADOS.md # Por que Supabase, segurança e como configurar
 docs/ARQUITETURA.md    # Mapa das seções
 docs/PROMPTS-HERO.md   # Prompts das imagens do carrossel
 ```
 
-## Banco de dados
-Está preparado para **Supabase**. Sem configuração, roda em modo demonstração, salvando tudo no navegador.
-Login de teste do painel: `admin@revelux.com` / `revelux123`. Passo a passo em [docs/BANCO-DE-DADOS.md](docs/BANCO-DE-DADOS.md).
+## Banco de dados e segurança
+Ligado ao **Supabase** (projeto `pfzuuypvagzztfpwjqyz`), com RLS em todas as tabelas, auditoria, CSP e cabeçalhos de segurança.
+- Configuração e criação da conta admin: [docs/BANCO-DE-DADOS.md](docs/BANCO-DE-DADOS.md)
+- Camadas de proteção e testes: [docs/SEGURANCA.md](docs/SEGURANCA.md)
+- Migrações: `supabase/migrations/`
 
 ## Identidade visual
 | Token | Claro | Escuro | Uso |
