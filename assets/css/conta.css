@@ -1,0 +1,84 @@
+/* Rêve Lux — página da conta (entrar, criar conta, minha conta). Usa os tokens de style.css. */
+:root{--err:#a1432f;--ok:#4f6b3f}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--err:#ef9a85;--ok:#a9c79a}}
+:root[data-theme="dark"]{--err:#ef9a85;--ok:#a9c79a}
+
+.conta{padding-top:2.5rem}
+.conta__guest{max-width:520px;margin-inline:auto}
+.conta__head{text-align:center;margin-bottom:1.8rem}
+.conta__head h1{font-size:clamp(2.2rem,5vw,3.2rem)}
+.conta__head h1:focus{outline:0}
+.conta__head--row{display:flex;justify-content:space-between;align-items:end;gap:1rem;text-align:left;flex-wrap:wrap}
+.conta__demo{max-width:520px;margin:0 auto 1.5rem;padding:.6rem 1rem;border:1px dashed var(--line);border-radius:10px;font-size:.8rem;color:var(--muted);text-align:center}
+.conta__lead{margin:0 0 1.2rem;font-size:.9rem}
+.conta__card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:clamp(1.2rem,4vw,2rem);box-shadow:var(--shadow)}
+.conta__card h2{font-size:1.8rem;margin-bottom:1.2rem}
+.conta__card h3{font-size:1.4rem;margin:0 0 1rem}
+.conta__card-head{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;margin-bottom:1.2rem}
+.conta__card-head h2{margin:0}
+.conta__grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1.5rem;align-items:start}
+.conta__card--wide{grid-column:1/-1}
+#medidas{scroll-margin-top:140px}
+.conta__cols{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 1rem}
+.conta__actions{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.conta__size{margin:.2rem 0 1rem;font-size:.95rem;color:var(--accent-strong);min-height:1.5em}
+.conta__delete{margin-top:2rem;font-size:.85rem;text-align:center}
+
+/* Abas */
+.tabs{display:flex;gap:.3rem;margin-bottom:1rem;border-bottom:1px solid var(--line)}
+.tabs [role="tab"]{flex:1;padding:.8rem .4rem;border:0;border-bottom:2px solid transparent;background:none;font-size:.78rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin-bottom:-1px}
+.tabs [role="tab"][aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.tabs [role="tab"]:hover{color:var(--text)}
+
+/* Campos */
+.field{display:flex;flex-direction:column;gap:.35rem;margin-bottom:1rem;min-width:0}
+.field label{font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.field label .muted{text-transform:none;letter-spacing:0}
+.field input:not([type=checkbox]),.field select{width:100%;height:46px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--text);padding:0 .9rem;font:inherit}
+.field input[readonly]{background:var(--surface-2);color:var(--muted)}
+.field input:focus,.field select:focus{outline:2px solid var(--accent);outline-offset:0;border-color:transparent}
+.field [aria-invalid="true"]{border-color:var(--err)}
+.field small{font-size:.78rem}
+.field__err{margin:0;font-size:.82rem;color:var(--err)}
+.field--span{grid-column:1/-1}
+.field--check{display:grid;grid-template-columns:auto 1fr;align-items:start;gap:.3rem .6rem}
+.field--check input{width:18px;height:18px;margin:.2rem 0 0;accent-color:var(--accent-strong)}
+.field--check label{font-size:.9rem;letter-spacing:0;text-transform:none;color:var(--text)}
+.field--check .field__err{grid-column:1/-1}
+
+.pass{position:relative}
+.pass input{padding-right:5.5rem!important}
+.pass__toggle{position:absolute;right:6px;top:50%;transform:translateY(-50%);border:0;background:none;padding:.45rem .6rem;border-radius:8px;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-strong)}
+.pass__toggle:hover{background:var(--accent-soft)}
+
+.form__msg{margin:0 0 1rem;font-size:.88rem;color:var(--err)}
+.form__msg--ok{color:var(--ok);padding:.8rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface)}
+.form__msg--info{color:var(--text);padding:.8rem 1rem;border:1px solid var(--line);border-radius:10px;background:var(--surface);text-align:center}
+.form__msg--ok:focus{outline:2px solid var(--accent);outline-offset:2px}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn--sm{padding:.6rem 1rem;font-size:.7rem}
+#user-msg{margin-bottom:1.5rem}
+
+/* Endereços */
+.addr__list{display:flex;flex-direction:column;gap:.8rem;margin-bottom:1rem}
+.addr{display:flex;justify-content:space-between;align-items:center;gap:1rem;flex-wrap:wrap;padding:1rem;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.addr__text{display:flex;flex-direction:column;gap:.15rem;min-width:0;overflow-wrap:anywhere}
+.addr__text .muted{font-size:.85rem}
+.addr__btns,.addr__confirm{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.addr__confirm span{font-size:.88rem}
+.addr__form{border-top:1px solid var(--line);padding-top:1.2rem;margin-top:.5rem}
+
+/* Pedidos */
+.orders{display:flex;flex-direction:column;gap:.8rem}
+.order{padding:1rem;border:1px solid var(--line);border-radius:10px;background:var(--bg)}
+.order__head{display:flex;flex-wrap:wrap;gap:.4rem 1rem;align-items:baseline}
+.order__head>strong:last-child{margin-left:auto}
+.order__status{font-size:.75rem;letter-spacing:.1em;text-transform:uppercase;color:var(--accent-strong)}
+.order__items{margin-top:.5rem;font-size:.85rem}
+.order p{margin:.4rem 0 0;font-size:.85rem}
+
+@media (max-width:760px){
+  .conta__grid,.conta__cols{grid-template-columns:1fr}
+  .tabs [role="tab"]{font-size:.7rem;letter-spacing:.06em}
+  .addr{flex-direction:column;align-items:stretch}
+}

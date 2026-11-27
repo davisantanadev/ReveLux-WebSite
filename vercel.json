@@ -52,6 +52,19 @@
       ]
     },
     {
+      "source": "/conta.html",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-store"
+        }
+      ]
+    },
+    {
       "source": "/(supabase|docs)/(.*)",
       "headers": [
         {
